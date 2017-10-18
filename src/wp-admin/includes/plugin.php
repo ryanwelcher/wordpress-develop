@@ -1190,12 +1190,18 @@ function add_submenu_page( $parent_slug, $page_title, $menu_title, $capability, 
 	$new_sub_menu = array( $menu_title, $capability, $menu_slug, $page_title );
 	if ( null === $position ) {
 		$submenu[ $parent_slug ][] = $new_sub_menu;
-	} elseif ( isset( $submenu[ $parent_slug ][ "$position" ] ) ) {
-		$position = $position + substr( base_convert( md5( $menu_slug . $menu_title ), 16, 10 ) , -5 ) * 0.00001;
-		$submenu[ $parent_slug ][ "$position" ] = $new_sub_menu;
 	} else {
+		//Set the position to a multiple of 5
+		$position = ( $position > 1 ) ? $position * 5 : $position;
+		if ( isset( $submenu[ $parent_slug ][ $position ] ) ) {
+			$existing_keys = array_keys( $submenu[ $parent_slug ] );
+			while ( in_array( $position, $existing_keys, true ) ) {
+				$position += 0.1;
+			}
+		}
 		$submenu[ $parent_slug ][ $position ] = $new_sub_menu;
 	}
+	// Sort the parent array
 	ksort( $submenu[ $parent_slug ] );
 
 	$hookname = get_plugin_page_hookname( $menu_slug, $parent_slug);
