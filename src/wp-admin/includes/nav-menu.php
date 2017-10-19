@@ -430,10 +430,11 @@ function wp_nav_menu_item_post_type_meta_box( $object, $box ) {
 				 * @param array $most_recent An array of post objects being listed.
 				 * @param array $args        An array of WP_Query arguments.
 				 * @param array $box         Arguments passed to wp_nav_menu_item_post_type_meta_box().
+				 * @param array $recent_args An array of the recent args.
 				 */
-				$most_recent = apply_filters( "nav_menu_items_{$post_type_name}_recent", $most_recent, $args, $box );
+				$most_recent = apply_filters( "nav_menu_items_{$post_type_name}_recent", $most_recent, $args, $box , $recent_args );
 
-				echo walk_nav_menu_tree( array_map('wp_setup_nav_menu_item', $most_recent), 0, (object) $args );
+				echo walk_nav_menu_tree( array_map( 'wp_setup_nav_menu_item', $most_recent ), 0, (object) $args );
 				?>
 			</ul>
 		</div><!-- /.tabs-panel -->
