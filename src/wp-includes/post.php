@@ -115,7 +115,7 @@ function create_initial_post_types() {
 		),
 		'public' => false,
 		'_builtin' => true, /* internal use only. don't use this when registering your own post type. */
-		'hierarchical' => false,
+		'hierarchical' => true,
 		'rewrite' => false,
 		'delete_with_user' => false,
 		'query_var' => false,
