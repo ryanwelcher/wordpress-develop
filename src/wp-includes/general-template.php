@@ -2633,11 +2633,17 @@ function wp_footer() {
 /**
  * Fire the wp_body_open action
  *
+ * * See {@see 'wp_body_open'}.
+ *
  * @since 5.0
- * @uses do_action() Calls 'wp_body_open' hook.
  */
 function wp_body_open() {
-	do_action('wp_body_open');
+	/**
+	 * Allows access to templates after the opening <body> tag.
+	 *
+	 * @since 5.0
+	 */
+	do_action( 'wp_body_open' );
 }
 
 /**
