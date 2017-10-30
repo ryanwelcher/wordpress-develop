@@ -2631,6 +2631,16 @@ function wp_footer() {
 }
 
 /**
+ * Fire the wp_body_open action
+ *
+ * @since 5.0
+ * @uses do_action() Calls 'wp_body_open' hook.
+ */
+function wp_body_open() {
+	do_action('wp_body_open');
+}
+
+/**
  * Display the links to the general feeds.
  *
  * @since 2.8.0

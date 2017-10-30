@@ -55,6 +55,7 @@
 </head>
 
 <body <?php body_class(); ?>>
+<?php wp_body_open(); ?>
 <div id="wrapper" class="hfeed">
 	<div id="header">
 		<div id="masthead">
