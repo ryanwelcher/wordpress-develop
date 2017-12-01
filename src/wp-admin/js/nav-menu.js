@@ -829,6 +829,20 @@ var wpNavMenu;
 					}
 				}
 			});
+
+			$( '#menu-name' ).on('keyup', _.debounce( function () {
+				var menuName = $( document.getElementById( 'menu-name' ) ),
+					menuNameVal = menuName.val();
+
+				if ( ! menuNameVal || menuNameVal === menuName.attr( 'title' ) || ! menuNameVal.replace( /\s+/, '' ) ) {
+					// Add warning for invalid menu name
+					menuName.addClass( 'invalid' );
+				} else {
+					// Remove warning for valid menu name
+					menuName.removeClass( 'invalid' );
+				}
+			}, 500 ));
+
 			$('#add-custom-links input[type="text"]').keypress(function(e){
 				$('#customlinkdiv').removeClass('form-invalid');
 
@@ -1172,8 +1186,8 @@ var wpNavMenu;
 			menuName = $('#menu-name'),
 			menuNameVal = menuName.val();
 			// Cancel and warn if invalid menu name
-			if( !menuNameVal || menuNameVal == menuName.attr('title') || !menuNameVal.replace(/\s+/, '') ) {
-				menuName.parent().addClass('form-invalid');
+			if( !menuNameVal || menuNameVal === menuName.attr('title') || !menuNameVal.replace(/\s+/, '') ) {
+				menuName.addClass('invalid');
 				return false;
 			}
 			// Copy menu theme locations
