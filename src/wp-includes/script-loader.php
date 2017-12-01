@@ -962,7 +962,7 @@ function wp_default_scripts( &$scripts ) {
 		 * Navigation Menus
 		 *
 		 * Adding underscore as a dependency to utilize _.debounce
-		 * @since 4.9.1
+		 * @since 5.0.0
 		 *
 		 * @see https://core.trac.wordpress.org/attachment/ticket/42321/
 		 */
