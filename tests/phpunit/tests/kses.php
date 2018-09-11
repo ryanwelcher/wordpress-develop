@@ -29,23 +29,26 @@ class Tests_Kses extends WP_UnitTestCase {
 			$this->assertEquals( $expect_string, wp_kses( $string, $allowedposttags ) );
 		}
 	}
-
+	
+	
 	/**
 	 * @ticket 20210
+	 * @group ryan
 	 */
 	function test_wp_filter_post_kses_a() {
 		global $allowedposttags;
 
 		$attributes = array(
-			'class'  => 'classname',
-			'id'     => 'id',
-			'style'  => 'color: red;',
-			'title'  => 'title',
-			'href'   => 'http://example.com',
-			'rel'    => 'related',
-			'rev'    => 'revision',
-			'name'   => 'name',
-			'target' => '_blank',
+			'class'    => 'classname',
+			'id'       => 'id',
+			'style'    => 'color: red;',
+			'title'    => 'title',
+			'href'     => 'http://example.com',
+			'rel'      => 'related',
+			'rev'      => 'revision',
+			'name'     => 'name',
+			'target'   => '_blank',
+			'download' => 'logo',
 		);
 
 		foreach ( $attributes as $name => $value ) {
@@ -54,7 +57,7 @@ class Tests_Kses extends WP_UnitTestCase {
 			$this->assertEquals( $expect_string, wp_kses( $string, $allowedposttags ) );
 		}
 	}
-
+	
 	/**
 	 * @ticket 20210
 	 */
