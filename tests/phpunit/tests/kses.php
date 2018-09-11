@@ -33,7 +33,6 @@ class Tests_Kses extends WP_UnitTestCase {
 	
 	/**
 	 * @ticket 20210
-	 * @group ryan
 	 */
 	function test_wp_filter_post_kses_a() {
 		global $allowedposttags;
