@@ -12,11 +12,14 @@ env:
     - WP_TRAVISCI=travis:phpunit
 matrix:
   include:
+  - php: 7.2
+    env: WP_TRAVISCI=travis:format
   - php: 7.1
     env: WP_TRAVISCI=travis:js
   - php: 7.2
   - php: 7.1
   - php: 7.0
+    env: WP_TEST_REPORTER=true
   - php: 5.6
   - php: 5.6
     env: WP_TRAVIS_OBJECT_CACHE=true
@@ -81,9 +84,15 @@ before_script:
         ;;
     esac
   fi
+- |
+  # We only need to run composer install on the code formatting job.
+  if [[ "$WP_TRAVISCI" == "travis:format" ]]; then
+    composer --version
+    composer install
+  fi
 - npm --version
 - node --version
-- nvm install 6.9.1
+- nvm install 8.9.3
 - npm install -g grunt-cli
 - npm install
 - npm prune
@@ -101,6 +110,14 @@ before_script:
 - svn --version
 - locale -a
 script: grunt $WP_TRAVISCI
+after_script:
+- |
+  if [[ "$WP_TEST_REPORTER" == "true" ]]; then
+    git clone https://github.com/WordPress/phpunit-test-runner.git test-runner
+    export WPT_PREPARE_DIR=$(pwd)
+    export WPT_TEST_DIR=$(pwd)
+    php test-runner/report.php
+  fi
 notifications:
   slack:
     rooms:
