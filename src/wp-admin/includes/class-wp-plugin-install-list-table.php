@@ -93,7 +93,7 @@ class WP_Plugin_Install_List_Table extends WP_List_Table {
 
 		$paged = $this->get_pagenum();
 
-		$per_page = 30;
+		$per_page = 36;
 
 		// These are the tabs which are shown on the page
 		$tabs = array();
@@ -184,7 +184,11 @@ class WP_Plugin_Install_List_Table extends WP_List_Table {
 				$action = 'save_wporg_username_' . get_current_user_id();
 				if ( isset( $_GET['_wpnonce'] ) && wp_verify_nonce( wp_unslash( $_GET['_wpnonce'] ), $action ) ) {
 					$user = isset( $_GET['user'] ) ? wp_unslash( $_GET['user'] ) : get_user_option( 'wporg_favorites' );
-					update_user_meta( get_current_user_id(), 'wporg_favorites', $user );
+
+					// If the save url parameter is passed with a falsey value, don't save the favorite user.
+					if ( ! isset( $_GET['save'] ) || $_GET['save'] ) {
+						update_user_meta( get_current_user_id(), 'wporg_favorites', $user );
+					}
 				} else {
 					$user = get_user_option( 'wporg_favorites' );
 				}
@@ -636,13 +640,13 @@ class WP_Plugin_Install_List_Table extends WP_List_Table {
 							/* translators: 1: "Update WordPress" screen URL, 2: "Updating PHP" page URL */
 							__( '<a href="%1$s">Please update WordPress</a>, and then <a href="%2$s">learn more about updating PHP</a>.' ),
 							self_admin_url( 'update-core.php' ),
-							esc_url( __( 'https://wordpress.org/support/upgrade-php/' ) )
+							esc_url( __( 'https://wordpress.org/support/update-php/' ) )
 						);
 					} else {
 						printf(
 							/* translators: %s: "Updating PHP" page URL */
 							__( '<a href="%s">Learn more about updating PHP</a>.' ),
-							esc_url( __( 'https://wordpress.org/support/upgrade-php/' ) )
+							esc_url( __( 'https://wordpress.org/support/update-php/' ) )
 						);
 					}
 				} elseif ( ! $compatible_wp ) {
@@ -659,7 +663,7 @@ class WP_Plugin_Install_List_Table extends WP_List_Table {
 					printf(
 						/* translators: %s: "Updating PHP" page URL */
 						__( '<a href="%s">Learn more about updating PHP</a>.' ),
-						esc_url( __( 'https://wordpress.org/support/upgrade-php/' ) )
+						esc_url( __( 'https://wordpress.org/support/update-php/' ) )
 					);
 				}
 				echo '</p></div>';

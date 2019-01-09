@@ -223,7 +223,7 @@ class WP_Comment_Query {
 	 *     @type string       $search                    Search term(s) to retrieve matching comments for.
 	 *                                                   Default empty.
 	 *     @type string|array $status                    Comment stati to limit results by. Accepts an array
-	 *                                                   or space/comma separate list of 'hold' (`comment_status=0`),
+	 *                                                   or space/comma-separated list of 'hold' (`comment_status=0`),
 	 *                                                   'approve' (`comment_status=1`), 'all', or a custom
 	 *                                                   comment status. Default 'all'.
 	 *     @type string|array $type                      Include comments of a given type, or array of types.
@@ -635,6 +635,7 @@ class WP_Comment_Query {
 		$number = absint( $this->query_vars['number'] );
 		$offset = absint( $this->query_vars['offset'] );
 		$paged  = absint( $this->query_vars['paged'] );
+		$limits = '';
 
 		if ( ! empty( $number ) ) {
 			if ( $offset ) {
@@ -819,7 +820,8 @@ class WP_Comment_Query {
 			$this->sql_clauses['where']['post_author__not_in'] = 'post_author NOT IN ( ' . implode( ',', wp_parse_id_list( $this->query_vars['post_author__not_in'] ) ) . ' )';
 		}
 
-		$join = '';
+		$join    = '';
+		$groupby = '';
 
 		if ( $join_posts_table ) {
 			$join .= "JOIN $wpdb->posts ON $wpdb->posts.ID = $wpdb->comments.comment_post_ID";

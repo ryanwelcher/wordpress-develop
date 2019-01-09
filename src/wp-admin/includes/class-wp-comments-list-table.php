@@ -315,7 +315,7 @@ class WP_Comments_List_Table extends WP_List_Table {
 		 * Filters the comment status links.
 		 *
 		 * @since 2.5.0
-		 * @since 5.0.0 The 'Mine' link was added.
+		 * @since 5.1.0 The 'Mine' link was added.
 		 *
 		 * @param string[] $status_links An associative array of fully-formed comment status links. Includes 'All', 'Mine',
 		 *                              'Pending', 'Approved', 'Spam', and 'Trash'.
@@ -508,8 +508,14 @@ class WP_Comments_List_Table extends WP_List_Table {
 
 	<tbody id="the-extra-comment-list" data-wp-lists="list:comment" style="display: none;">
 		<?php
+			/*
+			 * Back up the items to restore after printing the extra items markup.
+			 * The extra items may be empty, which will prevent the table nav from displaying later.
+			 */
+			$items       = $this->items;
 			$this->items = $this->extra_items;
 			$this->display_rows_or_placeholder();
+			$this->items = $items;
 		?>
 	</tbody>
 
