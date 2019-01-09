@@ -560,6 +560,10 @@ code {
 	margin: 10px 20px 0 2px;
 }
 
+.wrap.block-editor-no-js {
+	padding-left: 20px;
+}
+
 .wrap > h2:first-child, /* Back-compat for pre-4.4 */
 .wrap [class$="icon32"] + h2, /* Back-compat for pre-4.4 */
 .postbox .inside h2, /* Back-compat for pre-4.4 */
@@ -764,7 +768,6 @@ img.emoji {
 
 /* @todo can we combine these into a class or use an existing dashicon one? */
 .welcome-panel .welcome-panel-close:before,
-.try-gutenberg-panel .try-gutenberg-panel-close:before,
 .tagchecklist .ntdelbutton .remove-tag-icon:before,
 #bulk-titles div a:before,
 .notice-dismiss:before {
@@ -861,7 +864,7 @@ hr {
 #media-items a.delete,
 #media-items a.delete-permanently,
 #nav-menu-footer .menu-delete,
-#delete-link a.delete  {
+#delete-link a.delete {
 	color: #a00;
 }
 
@@ -1117,7 +1120,6 @@ th.action-links {
 .wp-filter .button.drawer-toggle:active {
 	background: transparent;
 	box-shadow: none;
-	-webkit-transform: none;
 	transform: none;
 }
 
@@ -1189,9 +1191,17 @@ th.action-links {
 
 .filter-drawer .filter-group-feature input,
 .filter-drawer .filter-group-feature label {
-	display: inline-block;
-	margin: 7px 4px 7px 0;
 	line-height: 16px;
+}
+
+.filter-drawer .filter-group-feature input {
+	position: absolute;
+	margin: 0;
+}
+
+.filter-group .filter-group-feature label {
+	display: block;
+	margin: 14px 0px 14px 23px;
 }
 
 .filter-drawer .buttons {
@@ -1500,7 +1510,6 @@ div.error {
 .import-php .updating-message:before,
 .button.updating-message:before,
 .button.installing:before {
-	-webkit-animation: rotation 2s infinite linear;
 	animation: rotation 2s infinite linear;
 }
 
@@ -1509,7 +1518,7 @@ div.error {
 .installed p:before,
 .button.updated-message:before {
 	color: #79ba49;
-	content: '\f147';
+	content: "\f147";
 }
 
 /* Error icon. */
@@ -1539,6 +1548,15 @@ div.error {
 
 ul#dismissed-updates {
 	display: none;
+}
+
+#dismissed-updates li > p {
+	margin-top: 0;
+}
+
+#dismiss,
+#undismiss {
+	margin-left: 0.5em;
 }
 
 form.upgrade {
@@ -1673,7 +1691,6 @@ form.upgrade .hint {
 
 #screen-meta-links .show-settings:active {
 	box-shadow: none;
-	-webkit-transform: none;
 	transform: none;
 }
 
@@ -2044,11 +2061,17 @@ html.wp-toolbar {
 	user-select: none;
 }
 
-.postbox .inside,
-.stuffbox .inside {
+.postbox .inside {
 	padding: 0 12px 12px;
 	line-height: 1.4em;
 	font-size: 13px;
+}
+
+.stuffbox .inside {
+	padding: 0;
+	line-height: 1.4em;
+	font-size: 13px;
+	margin-top: 0;
 }
 
 .postbox .inside {
@@ -2346,11 +2369,8 @@ body.iframe {
 }
 
 .edit-comment-author {
-	font-size: 14px;
-	line-height: 1.4;
-	font-weight: 600;
 	color: #222;
-	margin: 2px 0 0 9px;
+	border-bottom: 1px solid #eee;
 }
 
 #namediv h3 label, /* Back-compat for pre-4.4 */
@@ -2448,7 +2468,7 @@ div.star-holder .star-rating {
 	font-weight: 400;
 	font-style: normal;
 	vertical-align: top;
-	transition: color .1s ease-in 0;
+	transition: color .1s ease-in;
 	text-align: center;
 	color: #ffb900;
 }
@@ -2462,7 +2482,6 @@ div.star-holder .star-rating {
 }
 
 .rtl .star-rating .star-half {
-	-webkit-transform: rotateY(180deg);
 	transform: rotateY(180deg);
 }
 
@@ -2911,7 +2930,6 @@ div.action-links {
 	margin: -10px 0 0 -10px;
 	background: #fcfcfc url(../images/spinner.gif) no-repeat center;
 	background-size: 20px 20px;
-	-webkit-transform: translateZ(0);
 	transform: translateZ(0);
 }
 
@@ -2974,7 +2992,8 @@ img {
 /* Metabox collapse arrow indicators */
 .sidebar-name .toggle-indicator:before,
 .js .meta-box-sortables .postbox .toggle-indicator:before,
-.bulk-action-notice .toggle-indicator:before {
+.bulk-action-notice .toggle-indicator:before,
+.privacy-text-box .toggle-indicator:before {
 	content: "\f142";
 	display: inline-block;
 	font: normal 20px/1 dashicons;
@@ -2986,7 +3005,8 @@ img {
 
 .js .widgets-holder-wrap.closed .toggle-indicator:before,
 .js .meta-box-sortables .postbox.closed .handlediv .toggle-indicator:before,
-.bulk-action-notice .bulk-action-errors-collapsed .toggle-indicator:before {
+.bulk-action-notice .bulk-action-errors-collapsed .toggle-indicator:before,
+.privacy-text-box.closed .toggle-indicator:before {
 	content: "\f140";
 }
 
@@ -3043,6 +3063,7 @@ img {
 	min-height: 60vh;
 	height: calc( 100vh - 295px );
 	border: 1px solid #ddd;
+	box-sizing: border-box;
 }
 
 #templateside > h2 {
@@ -3061,8 +3082,8 @@ img {
 	margin-top: 0;
 	overflow: auto;
 	padding: 0;
-	min-height: calc(60vh + 2px);
-	height: calc(100vh - 293px);
+	min-height: 60vh;
+	height: calc(100vh - 295px);
 	background-color: #f7f7f7;
 	border: 1px solid #ddd;
 	border-left: none;
@@ -3126,7 +3147,7 @@ img {
 
 /* Styles for folder indicators/depth */
 .tree-folder .tree-folder::after {
-	content: ' ';
+	content: "";
 	display: block;
 	position: absolute;
 	left: 2px;
@@ -3135,7 +3156,7 @@ img {
 	bottom: 10px;
 }
 .tree-folder > li::before {
-	content: ' ';
+	content: "";
 	position: absolute;
 	display: block;
 	border-left: 1px solid #ccc;
@@ -3146,7 +3167,7 @@ img {
 	border-bottom: 1px solid #ccc;
 }
 .tree-folder > li::after {
-	content: ' ';
+	content: "";
 	position: absolute;
 	display: block;
 	border-left: 1px solid #ccc;
@@ -3241,15 +3262,19 @@ img {
 	margin: 4px 0;
 }
 
-#templateside li a,
+#templateside li:not(.howto) a,
 .theme-editor-php .highlight {
 	display: block;
 	padding: 3px 0 3px 12px;
 	text-decoration: none;
 }
 
-#templateside li > a:first-of-type {
+#templateside li:not(.howto) > a:first-of-type {
 	padding-top: 0;
+}
+
+#templateside li.howto {
+	padding: 6px 12px 12px 12px;
 }
 
 .theme-editor-php .highlight {
@@ -3347,7 +3372,8 @@ img {
 .control-section.open .accordion-section-title:after,
 #customize-info.open .accordion-section-title:after,
 .nav-menus-php .menu-item-edit-active .item-edit:before,
-.widget.open .widget-top .widget-action .toggle-indicator:before {
+.widget.open .widget-top .widget-action .toggle-indicator:before,
+.widget.widget-in-question .widget-top .widget-action .toggle-indicator:before  {
 	content: "\f142";
 }
 
@@ -3682,8 +3708,7 @@ img {
 	}
 
 	/* Hidden Elements */
-	#screen-meta,
-	#screen-meta-links,
+	#contextual-help-link-wrap,
 	#collapse-menu,
 	.post-format-select {
 		display: none !important;
@@ -3757,18 +3782,31 @@ img {
 	}
 
 	/* Theme/Plugin File Editor */
+
+	#template textarea,
+	#template .CodeMirror {
+		box-sizing: border-box;
+	}
+
 	#templateside {
 		float: none;
 		width: auto;
+	}
+
+	#templateside > ul {
+		border-left: 1px solid #ddd;
 	}
 
 	#templateside li {
 		margin: 0;
 	}
 
-	#templateside li a {
+	#templateside li:not(.howto) a {
 		display: block;
 		padding: 5px;
+	}
+	#templateside li.howto {
+		padding: 12px;
 	}
 
 	#templateside .highlight {
@@ -3815,11 +3853,44 @@ img {
 		left: -8px;
 	}
 	.wrap #templateside span.notice {
-		margin-left: -14px;
+		margin-left: -5px;
+		width: 100%;
 	}
 
 	.fileedit-sub .alignright {
+		float: left;
 		margin-top: 15px;
+		width: 100%;
+		text-align: left;
+	}
+
+	.fileedit-sub .alignright label {
+		display: block;
+	}
+
+	.fileedit-sub #theme,
+	.fileedit-sub #plugin {
+		margin-left: 0;
+		max-width: 70%;
+	}
+
+	.fileedit-sub input[type="submit"] {
+		margin-bottom: 0px;
+		padding: 8px 18px;
+	}
+
+	#documentation label[for="docs-list"] {
+		display: block;
+	}
+
+	#documentation select[name="docs-list"] {
+		margin-left: 0;
+		max-width: 60%;
+	}
+
+	#documentation input[type="button"] {
+		margin-bottom: 0;
+		padding: 8px 18px;
 	}
 
 	#wpfooter {
@@ -3837,6 +3908,10 @@ img {
 	.filter-drawer .filter-group-feature input,
 	.filter-drawer .filter-group-feature label {
 		line-height: 25px;
+	}
+
+	.filter-drawer .filter-group-feature label {
+		margin-left: 32px;
 	}
 
 	.wp-filter .button.drawer-toggle {
@@ -3878,23 +3953,6 @@ img {
 	h3 .nav-tab {
 		margin: 10px 10px 0 0;
 		border-bottom: 1px solid #ccc;
-	}
-}
-
-.options-media-php br {
-	display: none;
-}
-
-@media screen and (max-width: 375px) {
-	.options-media-php input[type="number"][name*="_size_"] {
-		margin: 5px 0;
-	}
-	.options-media-php label[for*="_size_h"]:before {
-		content: '';
-		display: block;
-	}
-	.options-media-php br {
-		display: block;
 	}
 }
 
