@@ -32,7 +32,7 @@ class Tests_Admin_Includes_Post extends WP_UnitTestCase {
 		$_post_data['saveasdraft'] = true;
 
 		$_results = _wp_translate_postdata( false, $_post_data );
-		$this->assertNotInstanceOf( 'WP_Error', $_results );
+		$this->assertNotWPError( $_results );
 		$this->assertEquals( $_post_data['post_author'], $_results['post_author'] );
 		$this->assertEquals( 'draft', $_results['post_status'] );
 
@@ -43,7 +43,7 @@ class Tests_Admin_Includes_Post extends WP_UnitTestCase {
 		$_post_data['publish']     = true;
 
 		$_results = _wp_translate_postdata( false, $_post_data );
-		$this->assertNotInstanceOf( 'WP_Error', $_results );
+		$this->assertNotWPError( $_results );
 		$this->assertEquals( $_post_data['post_author'], $_results['post_author'] );
 		$this->assertEquals( 'pending', $_results['post_status'] );
 
@@ -82,7 +82,7 @@ class Tests_Admin_Includes_Post extends WP_UnitTestCase {
 		$_post_data['saveasdraft'] = true;
 
 		$_results = _wp_translate_postdata( false, $_post_data );
-		$this->assertNotInstanceOf( 'WP_Error', $_results );
+		$this->assertNotWPError( $_results );
 		$this->assertEquals( $_post_data['post_author'], $_results['post_author'] );
 		$this->assertEquals( 'draft', $_results['post_status'] );
 
@@ -93,7 +93,7 @@ class Tests_Admin_Includes_Post extends WP_UnitTestCase {
 		$_post_data['publish']     = true;
 
 		$_results = _wp_translate_postdata( false, $_post_data );
-		$this->assertNotInstanceOf( 'WP_Error', $_results );
+		$this->assertNotWPError( $_results );
 		$this->assertEquals( $_post_data['post_author'], $_results['post_author'] );
 		$this->assertEquals( 'publish', $_results['post_status'] );
 
@@ -104,7 +104,7 @@ class Tests_Admin_Includes_Post extends WP_UnitTestCase {
 		$_post_data['saveasdraft'] = true;
 
 		$_results = _wp_translate_postdata( false, $_post_data );
-		$this->assertNotInstanceOf( 'WP_Error', $_results );
+		$this->assertNotWPError( $_results );
 		$this->assertEquals( $_post_data['post_author'], $_results['post_author'] );
 		$this->assertEquals( 'draft', $_results['post_status'] );
 
@@ -117,7 +117,7 @@ class Tests_Admin_Includes_Post extends WP_UnitTestCase {
 		$_post_data['saveasdraft'] = true;
 
 		$_results = _wp_translate_postdata( true, $_post_data );
-		$this->assertNotInstanceOf( 'WP_Error', $_results );
+		$this->assertNotWPError( $_results );
 		$this->assertEquals( $_post_data['post_author'], $_results['post_author'] );
 		$this->assertEquals( 'draft', $_results['post_status'] );
 	}
@@ -389,7 +389,9 @@ class Tests_Admin_Includes_Post extends WP_UnitTestCase {
 		wp_set_current_user( self::$admin_id );
 
 		$p = self::factory()->attachment->create_object(
-			'صورة.jpg', 0, array(
+			'صورة.jpg',
+			0,
+			array(
 				'post_mime_type' => 'image/jpeg',
 				'post_type'      => 'attachment',
 				'post_title'     => 'صورة',
@@ -748,4 +750,70 @@ class Tests_Admin_Includes_Post extends WP_UnitTestCase {
 		$this->assertSame( $p, post_exists( $title, $content, $date ) );
 	}
 
+	function test_use_block_editor_for_post() {
+		$this->assertFalse( use_block_editor_for_post( -1 ) );
+		$bogus_post_id = $this->factory()->post->create(
+			array(
+				'post_type' => 'bogus',
+			)
+		);
+		$this->assertFalse( use_block_editor_for_post( $bogus_post_id ) );
+
+		register_post_type(
+			'restless',
+			array(
+				'show_in_rest' => false,
+			)
+		);
+		$restless_post_id = $this->factory()->post->create(
+			array(
+				'post_type' => 'restless',
+			)
+		);
+		$this->assertFalse( use_block_editor_for_post( $restless_post_id ) );
+
+		$generic_post_id = $this->factory()->post->create();
+
+		add_filter( 'use_block_editor_for_post', '__return_false' );
+		$this->assertFalse( use_block_editor_for_post( $generic_post_id ) );
+		remove_filter( 'use_block_editor_for_post', '__return_false' );
+
+		add_filter( 'use_block_editor_for_post', '__return_true' );
+		$this->assertTrue( use_block_editor_for_post( $restless_post_id ) );
+		remove_filter( 'use_block_editor_for_post', '__return_true' );
+	}
+
+	function test_get_block_editor_server_block_settings() {
+		$name     = 'core/test';
+		$settings = array(
+			'icon'            => 'text',
+			'render_callback' => 'foo',
+		);
+
+		register_block_type( $name, $settings );
+
+		$blocks = get_block_editor_server_block_settings();
+
+		unregister_block_type( $name );
+
+		$this->assertArrayHasKey( $name, $blocks );
+		$this->assertSame( array( 'icon' => 'text' ), $blocks[ $name ] );
+	}
+
+	/**
+	 * @ticket 43559
+	 */
+	public function test_post_add_meta_empty_is_allowed() {
+		$p = self::factory()->post->create();
+
+		$_POST = array(
+			'metakeyinput' => 'testkey',
+			'metavalue'    => '',
+		);
+
+		wp_set_current_user( self::$admin_id );
+
+		$this->assertNotFalse( add_meta( $p ) );
+		$this->assertEquals( '', get_post_meta( $p, 'testkey', true ) );
+	}
 }

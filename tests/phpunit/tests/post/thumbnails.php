@@ -18,7 +18,9 @@ class Tests_Post_Thumbnail_Template extends WP_UnitTestCase {
 
 		$file                = DIR_TESTDATA . '/images/canola.jpg';
 		self::$attachment_id = $factory->attachment->create_upload_object(
-			$file, self::$post->ID, array(
+			$file,
+			self::$post->ID,
+			array(
 				'post_mime_type' => 'image/jpeg',
 			)
 		);
@@ -94,7 +96,9 @@ class Tests_Post_Thumbnail_Template extends WP_UnitTestCase {
 
 		$post_id       = self::factory()->post->create();
 		$attachment_id = self::factory()->attachment->create_object(
-			'image.jpg', $post_id, array(
+			'image.jpg',
+			$post_id,
+			array(
 				'post_mime_type' => 'image/jpeg',
 				'post_type'      => 'attachment',
 				'post_excerpt'   => $caption,
@@ -112,7 +116,9 @@ class Tests_Post_Thumbnail_Template extends WP_UnitTestCase {
 	function test_get_the_post_thumbnail_caption_empty() {
 		$post_id       = self::factory()->post->create();
 		$attachment_id = self::factory()->attachment->create_object(
-			'image.jpg', $post_id, array(
+			'image.jpg',
+			$post_id,
+			array(
 				'post_mime_type' => 'image/jpeg',
 				'post_type'      => 'attachment',
 				'post_excerpt'   => '',
@@ -132,7 +138,9 @@ class Tests_Post_Thumbnail_Template extends WP_UnitTestCase {
 
 		$post_id       = self::factory()->post->create();
 		$attachment_id = self::factory()->attachment->create_object(
-			'image.jpg', $post_id, array(
+			'image.jpg',
+			$post_id,
+			array(
 				'post_mime_type' => 'image/jpeg',
 				'post_type'      => 'attachment',
 				'post_excerpt'   => $caption,
@@ -141,10 +149,8 @@ class Tests_Post_Thumbnail_Template extends WP_UnitTestCase {
 
 		set_post_thumbnail( $post_id, $attachment_id );
 
-		ob_start();
+		$this->expectOutputString( $caption );
 		the_post_thumbnail_caption( $post_id );
-
-		$this->assertEquals( $caption, ob_get_clean() );
 	}
 
 	function test_get_the_post_thumbnail() {
@@ -153,7 +159,10 @@ class Tests_Post_Thumbnail_Template extends WP_UnitTestCase {
 		set_post_thumbnail( self::$post, self::$attachment_id );
 
 		$expected = wp_get_attachment_image(
-			self::$attachment_id, 'post-thumbnail', false, array(
+			self::$attachment_id,
+			'post-thumbnail',
+			false,
+			array(
 				'class' => 'attachment-post-thumbnail size-post-thumbnail wp-post-image',
 			)
 		);
@@ -166,33 +175,28 @@ class Tests_Post_Thumbnail_Template extends WP_UnitTestCase {
 	}
 
 	function test_the_post_thumbnail() {
-		ob_start();
-		the_post_thumbnail();
-		$actual = ob_get_clean();
 
-		$this->assertEquals( '', $actual );
+		$this->expectOutputString( '' );
+		the_post_thumbnail();
 
 		$GLOBALS['post'] = self::$post;
 
-		ob_start();
+		$this->expectOutputString( '' );
 		the_post_thumbnail();
-		$actual = ob_get_clean();
-
-		$this->assertEquals( '', $actual );
 
 		set_post_thumbnail( self::$post, self::$attachment_id );
 
 		$expected = wp_get_attachment_image(
-			self::$attachment_id, 'post-thumbnail', false, array(
+			self::$attachment_id,
+			'post-thumbnail',
+			false,
+			array(
 				'class' => 'attachment-post-thumbnail size-post-thumbnail wp-post-image',
 			)
 		);
 
-		ob_start();
+		$this->expectOutputString( $expected );
 		the_post_thumbnail();
-		$actual = ob_get_clean();
-
-		$this->assertEquals( $expected, $actual );
 	}
 
 	/**
@@ -233,25 +237,13 @@ class Tests_Post_Thumbnail_Template extends WP_UnitTestCase {
 	function test_the_post_thumbnail_url() {
 		$GLOBALS['post'] = self::$post;
 
-		ob_start();
+		$this->expectOutputString( '' );
 		the_post_thumbnail_url();
-		$actual = ob_get_clean();
-
-		$this->assertEmpty( $actual );
-
-		ob_start();
-		the_post_thumbnail_url();
-		$actual = ob_get_clean();
-
-		$this->assertEmpty( $actual );
 
 		set_post_thumbnail( self::$post, self::$attachment_id );
 
-		ob_start();
+		$this->expectOutputString( wp_get_attachment_url( self::$attachment_id ) );
 		the_post_thumbnail_url();
-		$actual = ob_get_clean();
-
-		$this->assertEquals( wp_get_attachment_url( self::$attachment_id ), $actual );
 	}
 
 	/**

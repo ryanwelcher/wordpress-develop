@@ -200,7 +200,7 @@ abstract class WP_Test_REST_Post_Type_Controller_Testcase extends WP_Test_REST_C
 	}
 
 	protected function check_get_posts_response( $response, $context = 'view' ) {
-		$this->assertNotInstanceOf( 'WP_Error', $response );
+		$this->assertNotWPError( $response );
 		$response = rest_ensure_response( $response );
 		$this->assertEquals( 200, $response->get_status() );
 
@@ -217,7 +217,8 @@ abstract class WP_Test_REST_Post_Type_Controller_Testcase extends WP_Test_REST_C
 			foreach ( $links as &$links_array ) {
 				foreach ( $links_array as &$link ) {
 					$attributes         = array_diff_key(
-						$link, array(
+						$link,
+						array(
 							'href' => 1,
 							'name' => 1,
 						)
@@ -232,7 +233,7 @@ abstract class WP_Test_REST_Post_Type_Controller_Testcase extends WP_Test_REST_C
 	}
 
 	protected function check_get_post_response( $response, $context = 'view' ) {
-		$this->assertNotInstanceOf( 'WP_Error', $response );
+		$this->assertNotWPError( $response );
 		$response = rest_ensure_response( $response );
 		$this->assertEquals( 200, $response->get_status() );
 
@@ -243,7 +244,7 @@ abstract class WP_Test_REST_Post_Type_Controller_Testcase extends WP_Test_REST_C
 	}
 
 	protected function check_create_post_response( $response ) {
-		$this->assertNotInstanceOf( 'WP_Error', $response );
+		$this->assertNotWPError( $response );
 		$response = rest_ensure_response( $response );
 
 		$this->assertEquals( 201, $response->get_status() );
@@ -256,7 +257,7 @@ abstract class WP_Test_REST_Post_Type_Controller_Testcase extends WP_Test_REST_C
 	}
 
 	protected function check_update_post_response( $response ) {
-		$this->assertNotInstanceOf( 'WP_Error', $response );
+		$this->assertNotWPError( $response );
 		$response = rest_ensure_response( $response );
 
 		$this->assertEquals( 200, $response->get_status() );
@@ -284,7 +285,8 @@ abstract class WP_Test_REST_Post_Type_Controller_Testcase extends WP_Test_REST_C
 
 	protected function set_raw_post_data( $args = array() ) {
 		return wp_parse_args(
-			$args, $this->set_post_data(
+			$args,
+			$this->set_post_data(
 				array(
 					'title'   => array(
 						'raw' => 'Post Title',

@@ -7,6 +7,8 @@ add_action( 'wp_head', 'wp_no_robots' );
 
 require( dirname( __FILE__ ) . '/wp-blog-header.php' );
 
+nocache_headers();
+
 if ( is_array( get_site_option( 'illegal_names' ) ) && isset( $_GET['new'] ) && in_array( $_GET['new'], get_site_option( 'illegal_names' ) ) ) {
 	wp_redirect( network_home_url() );
 	die();
@@ -57,7 +59,7 @@ function wpmu_signup_stylesheet() {
 	<style type="text/css">
 		.mu_register { width: 90%; margin:0 auto; }
 		.mu_register form { margin-top: 2em; }
-		.mu_register .error { font-weight:700; padding:10px; color:#333333; background:#FFEBE8; border:1px solid #CC0000; }
+		.mu_register .error { font-weight: 600; padding: 10px; color: #333333; background: #FFEBE8; border: 1px solid #CC0000; }
 		.mu_register input[type="submit"],
 			.mu_register #blog_title,
 			.mu_register #user_email,
@@ -65,10 +67,10 @@ function wpmu_signup_stylesheet() {
 			.mu_register #user_name { width:100%; font-size: 24px; margin:5px 0; }
 		.mu_register #site-language { display: block; }
 		.mu_register .prefix_address,
-			.mu_register .suffix_address {font-size: 18px;display:inline; }
-		.mu_register label { font-weight:700; font-size:15px; display:block; margin:10px 0; }
+			.mu_register .suffix_address { font-size: 18px; display:inline; }
+		.mu_register label { font-weight: 600; font-size: 15px; display: block; margin: 10px 0; }
 		.mu_register label.checkbox { display:inline; }
-		.mu_register .mu_alert { font-weight:700; padding:10px; color:#333333; background:#ffffe0; border:1px solid #e6db55; }
+		.mu_register .mu_alert { font-weight: 600; padding: 10px; color: #333333; background: #ffffe0; border: 1px solid #e6db55; }
 	</style>
 	<?php
 }
@@ -109,9 +111,9 @@ function show_blog_form( $blogname = '', $blog_title = '', $errors = '' ) {
 	}
 
 	if ( $errmsg = $errors->get_error_message( 'blogname' ) ) {
-	?>
+		?>
 		<p class="error"><?php echo $errmsg; ?></p>
-	<?php
+		<?php
 	}
 
 	if ( ! is_subdomain_install() ) {
@@ -136,8 +138,8 @@ function show_blog_form( $blogname = '', $blog_title = '', $errors = '' ) {
 	<label for="blog_title"><?php _e( 'Site Title:' ); ?></label>
 	<?php if ( $errmsg = $errors->get_error_message( 'blog_title' ) ) { ?>
 		<p class="error"><?php echo $errmsg; ?></p>
-	<?php
-}
+		<?php
+	}
 	echo '<input name="blog_title" type="text" id="blog_title" value="' . esc_attr( $blog_title ) . '" />';
 	?>
 
@@ -173,7 +175,7 @@ function show_blog_form( $blogname = '', $blog_title = '', $errors = '' ) {
 			);
 			?>
 		</p>
-	<?php
+		<?php
 		endif; // Languages.
 
 		$blog_public_on_checked = $blog_public_off_checked = '';
@@ -321,18 +323,24 @@ function signup_another_blog( $blogname = '', $blog_title = '', $errors = '' ) {
 	$blog_title = $filtered_results['blog_title'];
 	$errors     = $filtered_results['errors'];
 
+	/* translators: %s: Network's site name. */
 	echo '<h2>' . sprintf( __( 'Get <em>another</em> %s site in seconds' ), get_network()->site_name ) . '</h2>';
 
-	if ( $errors->get_error_code() ) {
+	if ( $errors->has_errors() ) {
 		echo '<p>' . __( 'There was a problem, please correct the form below and try again.' ) . '</p>';
 	}
 	?>
-	<p><?php printf( __( 'Welcome back, %s. By filling out the form below, you can <strong>add another site to your account</strong>. There is no limit to the number of sites you can have, so create to your heart&#8217;s content, but write responsibly!' ), $current_user->display_name ); ?></p>
+	<p>
+		<?php
+		/* translators: %s: Current user's display name. */
+		printf( __( 'Welcome back, %s. By filling out the form below, you can <strong>add another site to your account</strong>. There is no limit to the number of sites you can have, so create to your heart&#8217;s content, but write responsibly!' ), $current_user->display_name );
+		?>
+	</p>
 
 	<?php
 	$blogs = get_blogs_of_user( $current_user->ID );
 	if ( ! empty( $blogs ) ) {
-	?>
+		?>
 
 			<p><?php _e( 'Sites you are already a member of:' ); ?></p>
 			<ul>
@@ -366,7 +374,13 @@ function signup_another_blog( $blogname = '', $blog_title = '', $errors = '' ) {
 }
 
 /**
- * Validate a new site signup.
+ * Validate a new site signup for an existing user.
+ *
+ * @global string          $blogname   The new site's subdomain or directory name.
+ * @global string          $blog_title The new site's title.
+ * @global WP_Error        $errors     Existing errors in the global scope.
+ * @global string          $domain     The new site's domain.
+ * @global string          $path       The new site's path.
  *
  * @since MU (3.0.0)
  *
@@ -389,7 +403,7 @@ function validate_another_blog_signup() {
 	$blog_title = $result['blog_title'];
 	$errors     = $result['errors'];
 
-	if ( $errors->get_error_code() ) {
+	if ( $errors->has_errors() ) {
 		signup_another_blog( $blogname, $blog_title, $errors );
 		return false;
 	}
@@ -604,7 +618,7 @@ function validate_user_signup() {
 	$user_email = $result['user_email'];
 	$errors     = $result['errors'];
 
-	if ( $errors->get_error_code() ) {
+	if ( $errors->has_errors() ) {
 		signup_user( $user_name, $user_email, $errors );
 		return false;
 	}
@@ -729,7 +743,7 @@ function validate_blog_signup() {
 	$user_email  = $user_result['user_email'];
 	$user_errors = $user_result['errors'];
 
-	if ( $user_errors->get_error_code() ) {
+	if ( $user_errors->has_errors() ) {
 		signup_user( $user_name, $user_email, $user_errors );
 		return false;
 	}
@@ -741,7 +755,7 @@ function validate_blog_signup() {
 	$blog_title = $result['blog_title'];
 	$errors     = $result['errors'];
 
-	if ( $errors->get_error_code() ) {
+	if ( $errors->has_errors() ) {
 		signup_blog( $user_name, $user_email, $blogname, $blog_title, $errors );
 		return false;
 	}
@@ -947,13 +961,14 @@ if ( $active_signup == 'none' ) {
 				$newblog = get_blogaddress_by_name( $newblogname );
 
 				if ( $active_signup == 'blog' || $active_signup == 'all' ) {
-					/* translators: %s: site address */
 					printf(
+						/* translators: %s: site address */
 						'<p><em>' . __( 'The site you were looking for, %s, does not exist, but you can create it now!' ) . '</em></p>',
 						'<strong>' . $newblog . '</strong>'
 					);
-				} else {                  /* translators: %s: site address */
+				} else {
 					printf(
+						/* translators: %s: site address */
 						'<p><em>' . __( 'The site you were looking for, %s, does not exist.' ) . '</em></p>',
 						'<strong>' . $newblog . '</strong>'
 					);

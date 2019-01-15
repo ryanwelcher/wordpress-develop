@@ -130,11 +130,13 @@ function wp_generate_attachment_metadata( $attachment_id, $file ) {
 		 *
 		 * @since 2.9.0
 		 * @since 4.4.0 Added the `$metadata` argument.
+		 * @since 5.1.0 Added the `$attachment_id` argument.
 		 *
-		 * @param array $sizes    An associative array of image sizes.
-		 * @param array $metadata An associative array of image metadata: width, height, file.
+		 * @param array $sizes         An associative array of image sizes.
+		 * @param array $metadata      An associative array of image metadata: width, height, file.
+		 * @param int   $attachment_id Current attachment ID.
 		 */
-		$sizes = apply_filters( 'intermediate_image_sizes_advanced', $sizes, $metadata );
+		$sizes = apply_filters( 'intermediate_image_sizes_advanced', $sizes, $metadata, $attachment_id );
 
 		if ( $sizes ) {
 			$editor = wp_get_image_editor( $file );
@@ -213,8 +215,9 @@ function wp_generate_attachment_metadata( $attachment_id, $file ) {
 				update_post_meta( $attachment_id, '_thumbnail_id', $sub_attachment_id );
 			}
 		}
-	} // Try to create image thumbnails for PDFs
-	elseif ( 'application/pdf' === $mime_type ) {
+	} elseif ( 'application/pdf' === $mime_type ) {
+		// Try to create image thumbnails for PDFs.
+
 		$fallback_sizes = array(
 			'thumbnail',
 			'medium',
@@ -251,7 +254,7 @@ function wp_generate_attachment_metadata( $attachment_id, $file ) {
 				$sizes[ $s ]['crop'] = $_wp_additional_image_sizes[ $s ]['crop'];
 			} else {
 				// Force thumbnails to be soft crops.
-				if ( ! 'thumbnail' === $s ) {
+				if ( 'thumbnail' !== $s ) {
 					$sizes[ $s ]['crop'] = get_option( "{$s}_crop" );
 				}
 			}
@@ -355,7 +358,7 @@ function wp_read_image_metadata( $file ) {
 		return false;
 	}
 
-	list( , , $sourceImageType ) = getimagesize( $file );
+	list( , , $image_type ) = @getimagesize( $file );
 
 	/*
 	 * EXIF contains a bunch of data we'll probably never need formatted in ways
@@ -384,10 +387,10 @@ function wp_read_image_metadata( $file ) {
 	 * as caption, description etc.
 	 */
 	if ( is_callable( 'iptcparse' ) ) {
-		getimagesize( $file, $info );
+		@getimagesize( $file, $info );
 
 		if ( ! empty( $info['APP13'] ) ) {
-			$iptc = iptcparse( $info['APP13'] );
+			$iptc = @iptcparse( $info['APP13'] );
 
 			// Headline, "A brief synopsis of the caption."
 			if ( ! empty( $iptc['2#105'][0] ) ) {
@@ -435,6 +438,8 @@ function wp_read_image_metadata( $file ) {
 		}
 	}
 
+	$exif = array();
+
 	/**
 	 * Filters the image types to check for exif data.
 	 *
@@ -442,7 +447,9 @@ function wp_read_image_metadata( $file ) {
 	 *
 	 * @param array $image_types Image types to check for exif data.
 	 */
-	if ( is_callable( 'exif_read_data' ) && in_array( $sourceImageType, apply_filters( 'wp_read_image_metadata_types', array( IMAGETYPE_JPEG, IMAGETYPE_TIFF_II, IMAGETYPE_TIFF_MM ) ) ) ) {
+	$exif_image_types = apply_filters( 'wp_read_image_metadata_types', array( IMAGETYPE_JPEG, IMAGETYPE_TIFF_II, IMAGETYPE_TIFF_MM ) );
+
+	if ( is_callable( 'exif_read_data' ) && in_array( $image_type, $exif_image_types ) ) {
 		$exif = @exif_read_data( $file );
 
 		if ( ! empty( $exif['ImageDescription'] ) ) {
@@ -520,13 +527,15 @@ function wp_read_image_metadata( $file ) {
 	 *
 	 * @since 2.5.0
 	 * @since 4.4.0 The `$iptc` parameter was added.
+	 * @since 5.0.0 The `$exif` parameter was added.
 	 *
-	 * @param array  $meta            Image meta data.
-	 * @param string $file            Path to image file.
-	 * @param int    $sourceImageType Type of image.
-	 * @param array  $iptc            IPTC data.
+	 * @param array  $meta       Image meta data.
+	 * @param string $file       Path to image file.
+	 * @param int    $image_type Type of image, one of the `IMAGETYPE_XXX` constants.
+	 * @param array  $iptc       IPTC data.
+	 * @param array  $exif       EXIF data.
 	 */
-	return apply_filters( 'wp_read_image_metadata', $meta, $file, $sourceImageType, $iptc );
+	return apply_filters( 'wp_read_image_metadata', $meta, $file, $image_type, $iptc, $exif );
 
 }
 
@@ -553,6 +562,11 @@ function file_is_valid_image( $path ) {
  */
 function file_is_displayable_image( $path ) {
 	$displayable_image_types = array( IMAGETYPE_GIF, IMAGETYPE_JPEG, IMAGETYPE_PNG, IMAGETYPE_BMP );
+
+	// IMAGETYPE_ICO is only defined in PHP 5.3+.
+	if ( defined( 'IMAGETYPE_ICO' ) ) {
+		$displayable_image_types[] = IMAGETYPE_ICO;
+	}
 
 	$info = @getimagesize( $path );
 	if ( empty( $info ) ) {

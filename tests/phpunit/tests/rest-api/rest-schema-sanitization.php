@@ -110,6 +110,7 @@ class WP_Test_REST_Schema_Sanitization extends WP_UnitTestCase {
 		);
 		$this->assertEquals( array( 1, 2 ), rest_sanitize_value_from_schema( '1,2', $schema ) );
 		$this->assertEquals( array( 1, 2, 0 ), rest_sanitize_value_from_schema( '1,2,a', $schema ) );
+		$this->assertEquals( array( 1, 2 ), rest_sanitize_value_from_schema( '1,2,', $schema ) );
 	}
 
 	public function test_type_array_with_enum() {
@@ -134,6 +135,7 @@ class WP_Test_REST_Schema_Sanitization extends WP_UnitTestCase {
 		);
 		$this->assertEquals( array( 'ribs', 'chicken' ), rest_sanitize_value_from_schema( 'ribs,chicken', $schema ) );
 		$this->assertEquals( array( 'chicken', 'coleslaw' ), rest_sanitize_value_from_schema( 'chicken,coleslaw', $schema ) );
+		$this->assertEquals( array( 'chicken', 'coleslaw' ), rest_sanitize_value_from_schema( 'chicken,coleslaw,', $schema ) );
 	}
 
 	public function test_type_array_is_associative() {
@@ -144,11 +146,13 @@ class WP_Test_REST_Schema_Sanitization extends WP_UnitTestCase {
 			),
 		);
 		$this->assertEquals(
-			array( '1', '2' ), rest_sanitize_value_from_schema(
+			array( '1', '2' ),
+			rest_sanitize_value_from_schema(
 				array(
 					'first'  => '1',
 					'second' => '2',
-				), $schema
+				),
+				$schema
 			)
 		);
 	}
@@ -168,11 +172,13 @@ class WP_Test_REST_Schema_Sanitization extends WP_UnitTestCase {
 			array(
 				'a' => 1,
 				'b' => 1,
-			), rest_sanitize_value_from_schema(
+			),
+			rest_sanitize_value_from_schema(
 				array(
 					'a' => '1',
 					'b' => 1,
-				), $schema
+				),
+				$schema
 			)
 		);
 	}
@@ -190,11 +196,13 @@ class WP_Test_REST_Schema_Sanitization extends WP_UnitTestCase {
 		$this->assertEquals( array( 'a' => 1 ), rest_sanitize_value_from_schema( array( 'a' => 1 ), $schema ) );
 		$this->assertEquals( array( 'a' => 1 ), rest_sanitize_value_from_schema( array( 'a' => '1' ), $schema ) );
 		$this->assertEquals(
-			array( 'a' => 1 ), rest_sanitize_value_from_schema(
+			array( 'a' => 1 ),
+			rest_sanitize_value_from_schema(
 				array(
 					'a' => '1',
 					'b' => 1,
-				), $schema
+				),
+				$schema
 			)
 		);
 	}

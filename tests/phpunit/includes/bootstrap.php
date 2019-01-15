@@ -10,14 +10,18 @@ if ( class_exists( 'PHPUnit\Runner\Version' ) ) {
 	require_once dirname( __FILE__ ) . '/phpunit6-compat.php';
 }
 
-$config_file_path = dirname( dirname( __FILE__ ) );
-if ( ! file_exists( $config_file_path . '/wp-tests-config.php' ) ) {
-	// Support the config file from the root of the develop repository.
-	if ( basename( $config_file_path ) === 'phpunit' && basename( dirname( $config_file_path ) ) === 'tests' ) {
-		$config_file_path = dirname( dirname( $config_file_path ) );
+if ( defined( 'WP_TESTS_CONFIG_FILE_PATH' ) ) {
+	$config_file_path = WP_TESTS_CONFIG_FILE_PATH;
+} else {
+	$config_file_path = dirname( dirname( __FILE__ ) );
+	if ( ! file_exists( $config_file_path . '/wp-tests-config.php' ) ) {
+		// Support the config file from the root of the develop repository.
+		if ( basename( $config_file_path ) === 'phpunit' && basename( dirname( $config_file_path ) ) === 'tests' ) {
+			$config_file_path = dirname( dirname( $config_file_path ) );
+		}
 	}
+	$config_file_path .= '/wp-tests-config.php';
 }
-$config_file_path .= '/wp-tests-config.php';
 
 /*
  * Globalize some WordPress variables, because PHPUnit loads this file inside a function
@@ -36,6 +40,7 @@ tests_reset__SERVER();
 
 define( 'WP_TESTS_TABLE_PREFIX', $table_prefix );
 define( 'DIR_TESTDATA', dirname( __FILE__ ) . '/../data' );
+define( 'DIR_TESTROOT', realpath( dirname( dirname( __FILE__ ) ) ) );
 
 define( 'WP_LANG_DIR', DIR_TESTDATA . '/languages' );
 
@@ -65,11 +70,17 @@ $phpmailer = new MockPHPMailer( true );
 if ( ! defined( 'WP_DEFAULT_THEME' ) ) {
 	define( 'WP_DEFAULT_THEME', 'default' );
 }
-$wp_theme_directories = array( DIR_TESTDATA . '/themedir1' );
+$wp_theme_directories = array();
 
-system( WP_PHP_BINARY . ' ' . escapeshellarg( dirname( __FILE__ ) . '/install.php' ) . ' ' . escapeshellarg( $config_file_path ) . ' ' . $multisite, $retval );
-if ( 0 !== $retval ) {
-	exit( $retval );
+if ( file_exists( DIR_TESTDATA . '/themedir1' ) ) {
+	$wp_theme_directories[] = DIR_TESTDATA . '/themedir1';
+}
+
+if ( '1' !== getenv( 'WP_TESTS_SKIP_INSTALL' ) ) {
+	system( WP_PHP_BINARY . ' ' . escapeshellarg( dirname( __FILE__ ) . '/install.php' ) . ' ' . escapeshellarg( $config_file_path ) . ' ' . $multisite, $retval );
+	if ( 0 !== $retval ) {
+		exit( $retval );
+	}
 }
 
 if ( $multisite ) {
@@ -85,6 +96,8 @@ unset( $multisite );
 $GLOBALS['_wp_die_disabled'] = false;
 // Allow tests to override wp_die
 tests_add_filter( 'wp_die_handler', '_wp_die_handler_filter' );
+// Use the Spy REST Server instead of default
+tests_add_filter( 'wp_rest_server_class', '_wp_rest_server_class_filter' );
 
 // Preset WordPress options defined in bootstrap file.
 // Used to activate themes, plugins, as well as  other settings.
@@ -115,6 +128,8 @@ require dirname( __FILE__ ) . '/testcase-canonical.php';
 require dirname( __FILE__ ) . '/exceptions.php';
 require dirname( __FILE__ ) . '/utils.php';
 require dirname( __FILE__ ) . '/spy-rest-server.php';
+require dirname( __FILE__ ) . '/class-wp-rest-test-search-handler.php';
+require dirname( __FILE__ ) . '/class-wp-fake-block-type.php';
 
 /**
  * A child class of the PHP test runner.

@@ -43,7 +43,7 @@ class Core_Upgrader extends WP_Upgrader {
 	 *
 	 * @since 2.8.0
 	 *
-	 * @global WP_Filesystem_Base $wp_filesystem Subclass
+	 * @global WP_Filesystem_Base $wp_filesystem                WordPress filesystem subclass.
 	 * @global callable           $_wp_filesystem_direct_method
 	 *
 	 * @param object $current Response object for whether WordPress is current.
@@ -180,7 +180,9 @@ class Core_Upgrader extends WP_Upgrader {
 
 				$original_result = $result;
 				$result          = new WP_Error(
-					'rollback_was_required', $this->strings['rollback_was_required'], (object) array(
+					'rollback_was_required',
+					$this->strings['rollback_was_required'],
+					(object) array(
 						'update'   => $original_result,
 						'rollback' => $rollback_result,
 					)
@@ -190,7 +192,9 @@ class Core_Upgrader extends WP_Upgrader {
 
 		/** This action is documented in wp-admin/includes/class-wp-upgrader.php */
 		do_action(
-			'upgrader_process_complete', $this, array(
+			'upgrader_process_complete',
+			$this,
+			array(
 				'action' => 'update',
 				'type'   => 'core',
 			)
@@ -241,8 +245,6 @@ class Core_Upgrader extends WP_Upgrader {
 	 * Determines if this WordPress Core version should update to an offered version or not.
 	 *
 	 * @since 3.7.0
-	 *
-	 * @static
 	 *
 	 * @param string $offered_ver The offered version, of the format x.y.z.
 	 * @return bool True if we should update to the offered version, otherwise false.

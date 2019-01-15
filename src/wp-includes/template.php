@@ -477,7 +477,7 @@ function get_search_template() {
  * @since 4.4.0 `single-{post_type}-{post_name}.php` was added to the top of the template hierarchy.
  * @since 4.7.0 The decoded form of `single-{post_type}-{post_name}.php` was added to the top of the
  *              template hierarchy when the post name contains multibyte characters.
- * @since 4.7.0 {Post Type Template}.php was added to the top of the template hierarchy.
+ * @since 4.7.0 `{Post Type Template}.php` was added to the top of the template hierarchy.
  *
  * @see get_query_template()
  *
@@ -684,6 +684,15 @@ function load_template( $_template_file, $require_once = true ) {
 	global $posts, $post, $wp_did_header, $wp_query, $wp_rewrite, $wpdb, $wp_version, $wp, $id, $comment, $user_ID;
 
 	if ( is_array( $wp_query->query_vars ) ) {
+		/*
+		 * This use of extract() cannot be removed. There are many possible ways that
+		 * templates could depend on variables that it creates existing, and no way to
+		 * detect and deprecate it.
+		 *
+		 * Passing the EXTR_SKIP flag is the safest option, ensuring globals and
+		 * function variables cannot be overwritten.
+		 */
+		// phpcs:ignore WordPress.PHP.DontExtract.extract_extract
 		extract( $wp_query->query_vars, EXTR_SKIP );
 	}
 

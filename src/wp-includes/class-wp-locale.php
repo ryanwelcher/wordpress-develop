@@ -44,14 +44,6 @@ class WP_Locale {
 	public $weekday_abbrev;
 
 	/**
-	 * Stores the default start of the week.
-	 *
-	 * @since 4.4.0
-	 * @var string
-	 */
-	public $start_of_week;
-
-	/**
 	 * Stores the translated strings for the full month names.
 	 *
 	 * @since 2.1.0
@@ -224,8 +216,9 @@ class WP_Locale {
 		// Set text direction.
 		if ( isset( $GLOBALS['text_direction'] ) ) {
 			$this->text_direction = $GLOBALS['text_direction'];
-		} /* translators: 'rtl' or 'ltr'. This sets the text direction for WordPress. */
-		elseif ( 'rtl' == _x( 'ltr', 'text direction' ) ) {
+
+			/* translators: 'rtl' or 'ltr'. This sets the text direction for WordPress. */
+		} elseif ( 'rtl' == _x( 'ltr', 'text direction' ) ) {
 			$this->text_direction = 'rtl';
 		}
 
@@ -254,8 +247,8 @@ class WP_Locale {
 	 *
 	 * @since 2.1.0
 	 *
-	 * @param int $weekday_number 0 for Sunday through 6 Saturday
-	 * @return string Full translated weekday
+	 * @param int $weekday_number 0 for Sunday through 6 Saturday.
+	 * @return string Full translated weekday.
 	 */
 	public function get_weekday( $weekday_number ) {
 		return $this->weekday[ $weekday_number ];
@@ -271,8 +264,8 @@ class WP_Locale {
 	 *
 	 * @since 2.1.0
 	 *
-	 * @param string $weekday_name
-	 * @return string
+	 * @param string $weekday_name Full translated weekday word.
+	 * @return string Translated weekday initial.
 	 */
 	public function get_weekday_initial( $weekday_name ) {
 		return $this->weekday_initial[ $weekday_name ];
@@ -286,8 +279,8 @@ class WP_Locale {
 	 *
 	 * @since 2.1.0
 	 *
-	 * @param string $weekday_name Full translated weekday word
-	 * @return string Translated weekday abbreviation
+	 * @param string $weekday_name Full translated weekday word.
+	 * @return string Translated weekday abbreviation.
 	 */
 	public function get_weekday_abbrev( $weekday_name ) {
 		return $this->weekday_abbrev[ $weekday_name ];
@@ -306,8 +299,8 @@ class WP_Locale {
 	 *
 	 * @since 2.1.0
 	 *
-	 * @param string|int $month_number '01' through '12'
-	 * @return string Translated full month name
+	 * @param string|int $month_number '01' through '12'.
+	 * @return string Translated full month name.
 	 */
 	public function get_month( $month_number ) {
 		return $this->month[ zeroise( $month_number, 2 ) ];
@@ -321,8 +314,8 @@ class WP_Locale {
 	 *
 	 * @since 2.1.0
 	 *
-	 * @param string $month_name Translated month to get abbreviated version
-	 * @return string Translated abbreviated month
+	 * @param string $month_name Translated month to get abbreviated version.
+	 * @return string Translated abbreviated month.
 	 */
 	public function get_month_abbrev( $month_name ) {
 		return $this->month_abbrev[ $month_name ];
