@@ -2,7 +2,6 @@
 /**
  * @group navmenus
  * @group walker
- * @group ryan
  */
 class Tests_Walker_Nav_Menu extends WP_UnitTestCase {
 
