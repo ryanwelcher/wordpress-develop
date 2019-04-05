@@ -1312,7 +1312,7 @@ function add_menu_page( $page_title, $menu_title, $capability, $menu_slug, $func
  *                              and only include lowercase alphanumeric, dashes, and underscores characters
  *                              to be compatible with sanitize_key().
  * @param callable $function    The function to be called to output the content for this page.
- * @param int      $position    The position in the menu order this one should appear.
+ * @param int      $position    The position order in the menu where this item should appear.
  *
  * @return false|string The resulting page's hook_suffix, or false if the user does not have the capability required.
  */
@@ -1350,15 +1350,15 @@ function add_submenu_page( $parent_slug, $page_title, $menu_title, $capability, 
 	if ( null === $position ) {
 		$submenu[ $parent_slug ][] = $new_sub_menu;
 	} else {
-		//Set the position to a multiple of 5
-		$position = ( $position > 1 ) ? $position * 5 : $position;
-		if ( isset( $submenu[ $parent_slug ][ $position ] ) ) {
-			$existing_keys = array_keys( $submenu[ $parent_slug ] );
-			while ( in_array( $position, $existing_keys, true ) ) {
-				$position += 0.1;
-			}
-		}
-		$submenu[ $parent_slug ][ $position ] = $new_sub_menu;
+		// If there is a position.
+		// Grab all of the items before the insertion point.
+		$before_items = array_slice( $submenu[ $parent_slug ], 0, $position, true );
+		// Grab all of the items after the insertion point
+		$after_items = array_slice( $submenu[ $parent_slug ], $position, null, true );
+		// Add the new item
+		$before_items[] = $new_sub_menu;
+		// Merge the items.
+		$submenu[ $parent_slug ] = array_merge( $before_items, $after_items );
 	}
 	// Sort the parent array
 	ksort( $submenu[ $parent_slug ] );
