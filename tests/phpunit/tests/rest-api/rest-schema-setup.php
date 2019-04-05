@@ -122,9 +122,13 @@ class WP_Test_REST_Schema_Initialization extends WP_Test_REST_TestCase {
 			'/wp/v2/block-renderer/(?P<name>core/block)',
 			'/wp/v2/block-renderer/(?P<name>core/latest-comments)',
 			'/wp/v2/block-renderer/(?P<name>core/archives)',
+			'/wp/v2/block-renderer/(?P<name>core/calendar)',
 			'/wp/v2/block-renderer/(?P<name>core/categories)',
 			'/wp/v2/block-renderer/(?P<name>core/latest-posts)',
+			'/wp/v2/block-renderer/(?P<name>core/rss)',
+			'/wp/v2/block-renderer/(?P<name>core/search)',
 			'/wp/v2/block-renderer/(?P<name>core/shortcode)',
+			'/wp/v2/block-renderer/(?P<name>core/tag-cloud)',
 			'/wp/v2/settings',
 			'/wp/v2/themes',
 		);
@@ -257,7 +261,16 @@ class WP_Test_REST_Schema_Initialization extends WP_Test_REST_TestCase {
 			'show_in_rest'      => true,
 		);
 
+		$meta_multi_args           = $meta_args;
+		$meta_multi_args['single'] = false;
+
 		// Set up meta.
+		register_meta( 'term', 'test_single', $meta_args );
+		register_meta( 'term', 'test_multi', $meta_multi_args );
+		register_term_meta( 'category', 'test_cat_single', $meta_args );
+		register_term_meta( 'category', 'test_cat_multi', $meta_multi_args );
+		register_term_meta( 'post_tag', 'test_tag_meta', $meta_args );
+
 		register_meta( 'user', 'meta_key', $meta_args );
 		update_user_meta( 1, 'meta_key', 'meta_value' ); // Always use the first user.
 		register_meta( 'post', 'meta_key', $meta_args );

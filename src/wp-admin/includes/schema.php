@@ -541,7 +541,7 @@ function populate_options( array $options = array() ) {
 		'wp_page_for_privacy_policy'      => 0,
 
 		// 4.9.8
-		'show_comments_cookies_opt_in'    => 0,
+		'show_comments_cookies_opt_in'    => 1,
 	);
 
 	// 3.3
@@ -707,18 +707,6 @@ function populate_roles() {
  */
 function populate_roles_160() {
 	// Add roles
-
-	// Dummy gettext calls to get strings in the catalog.
-	/* translators: user role */
-	_x( 'Administrator', 'User role' );
-	/* translators: user role */
-	_x( 'Editor', 'User role' );
-	/* translators: user role */
-	_x( 'Author', 'User role' );
-	/* translators: user role */
-	_x( 'Contributor', 'User role' );
-	/* translators: user role */
-	_x( 'Subscriber', 'User role' );
 
 	add_role( 'administrator', 'Administrator' );
 	add_role( 'editor', 'Editor' );
@@ -1316,8 +1304,18 @@ function populate_site_meta( $site_id, array $meta = array() ) {
 		return;
 	}
 
+	/**
+	 * Filters meta for a site on creation.
+	 *
+	 * @since 5.2.0
+	 *
+	 * @param array $meta    Associative array of site meta keys and values to be inserted.
+	 * @param int   $site_id ID of site to populate.
+	 */
+	$site_meta = apply_filters( 'populate_site_meta', $meta, $site_id );
+
 	$insert = '';
-	foreach ( $meta as $meta_key => $meta_value ) {
+	foreach ( $site_meta as $meta_key => $meta_value ) {
 		if ( is_array( $meta_value ) ) {
 			$meta_value = serialize( $meta_value );
 		}
@@ -1329,5 +1327,6 @@ function populate_site_meta( $site_id, array $meta = array() ) {
 
 	$wpdb->query( "INSERT INTO $wpdb->blogmeta ( blog_id, meta_key, meta_value ) VALUES " . $insert ); // phpcs:ignore WordPress.DB.PreparedSQL.NotPrepared
 
+	wp_cache_delete( $site_id, 'blog_meta' );
 	wp_cache_set_sites_last_changed();
 }

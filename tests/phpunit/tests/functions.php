@@ -7,7 +7,7 @@ class Tests_Functions extends WP_UnitTestCase {
 	function test_wp_parse_args_object() {
 		$x        = new MockClass;
 		$x->_baba = 5;
-		$x->yZ    = 'baba';
+		$x->yZ    = 'baba'; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 		$x->a     = array( 5, 111, 'x' );
 		$this->assertEquals(
 			array(
@@ -43,7 +43,7 @@ class Tests_Functions extends WP_UnitTestCase {
 	function test_wp_parse_args_defaults() {
 		$x        = new MockClass;
 		$x->_baba = 5;
-		$x->yZ    = 'baba';
+		$x->yZ    = 'baba'; // phpcs:ignore WordPress.NamingConventions.ValidVariableName.UsedPropertyNotSnakeCase
 		$x->a     = array( 5, 111, 'x' );
 		$d        = array( 'pu' => 'bu' );
 		$this->assertEquals(
@@ -466,6 +466,53 @@ class Tests_Functions extends WP_UnitTestCase {
 	}
 
 	/**
+	 * Test that the media grid uses the correct available single media type.
+	 * @ticket 43658
+	 */
+	function test_wp_enqueue_media_single_mime_type() {
+		$filename      = DIR_TESTDATA . '/images/test-image.jpg';
+		$contents      = file_get_contents( $filename );
+		$upload        = wp_upload_bits( basename( $filename ), null, $contents );
+		$attachment_id = $this->_make_attachment( $upload );
+
+		add_filter(
+			'media_view_settings',
+			function( $settings ) {
+				$this->assertEquals( array( 'image' ), array_keys( $settings['mimeTypes'] ) );
+				return $settings;
+			}
+		);
+		wp_enqueue_media();
+		remove_all_filters( 'media_view_settings' );
+	}
+
+	/**
+	 * Test that the media grid uses the correct available multiple media types.
+	 * @ticket 43658
+	 */
+	function test_wp_enqueue_media_multiple_mime_types() {
+		$filename      = DIR_TESTDATA . '/images/test-image.jpg';
+		$contents      = file_get_contents( $filename );
+		$upload        = wp_upload_bits( basename( $filename ), null, $contents );
+		$attachment_id = $this->_make_attachment( $upload );
+
+		$filename      = DIR_TESTDATA . '/uploads/small-audio.mp3';
+		$contents      = file_get_contents( $filename );
+		$upload        = wp_upload_bits( basename( $filename ), null, $contents );
+		$attachment_id = $this->_make_attachment( $upload );
+
+		add_filter(
+			'media_view_settings',
+			function( $settings ) {
+				$this->assertEquals( array( 'image', 'audio' ), array_keys( $settings['mimeTypes'] ) );
+				return $settings;
+			}
+		);
+		wp_enqueue_media();
+		remove_all_filters( 'media_view_settings' );
+	}
+
+	/**
 	 * @ticket 21594
 	 */
 	function test_wp_get_mime_types() {
@@ -532,6 +579,30 @@ class Tests_Functions extends WP_UnitTestCase {
 		$this->assertEquals( 'foobarbaz', get_option( 'blog_charset' ) );
 
 		update_option( 'blog_charset', $orig_blog_charset );
+	}
+
+	/**
+	 * @ticket 43977
+	 * @dataProvider data_wp_parse_list
+	 */
+	function test_wp_parse_list( $expected, $actual ) {
+		$this->assertSame( $expected, array_values( wp_parse_list( $actual ) ) );
+	}
+
+	function data_wp_parse_list() {
+		return array(
+			array( array( '1', '2', '3', '4' ), '1,2,3,4' ),
+			array( array( 'apple', 'banana', 'carrot', 'dog' ), 'apple,banana,carrot,dog' ),
+			array( array( '1', '2', 'apple', 'banana' ), '1,2,apple,banana' ),
+			array( array( '1', '2', 'apple', 'banana' ), '1, 2,apple,banana' ),
+			array( array( '1', '2', 'apple', 'banana' ), '1,2,apple,,banana' ),
+			array( array( '1', '2', 'apple', 'banana' ), ',1,2,apple,banana' ),
+			array( array( '1', '2', 'apple', 'banana' ), '1,2,apple,banana,' ),
+			array( array( '1', '2', 'apple', 'banana' ), '1,2 ,apple,banana' ),
+			array( array(), '' ),
+			array( array(), ',' ),
+			array( array(), ',,' ),
+		);
 	}
 
 	/**

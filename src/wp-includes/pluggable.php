@@ -26,7 +26,7 @@ if ( ! function_exists( 'wp_set_current_user' ) ) :
 	function wp_set_current_user( $id, $name = '' ) {
 		global $current_user;
 
-		// If `$id` matches the user who's already current, there's nothing to do.
+		// If `$id` matches the current user, there is nothing to do.
 		if ( isset( $current_user )
 		&& ( $current_user instanceof WP_User )
 		&& ( $id == $current_user->ID )
@@ -1892,6 +1892,11 @@ if ( ! function_exists( 'wp_new_user_notification' ) ) :
 	function wp_new_user_notification( $user_id, $deprecated = null, $notify = '' ) {
 		if ( $deprecated !== null ) {
 			_deprecated_argument( __FUNCTION__, '4.3.1' );
+		}
+
+		// Accepts only 'user', 'admin' , 'both' or default '' as $notify
+		if ( ! in_array( $notify, array( 'user', 'admin', 'both', '' ), true ) ) {
+			return;
 		}
 
 		global $wpdb, $wp_hasher;
