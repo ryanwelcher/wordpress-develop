@@ -67,7 +67,7 @@ class WP_Posts_List_Table extends WP_List_Table {
 	 * @see WP_List_Table::__construct() for more information on default arguments.
 	 *
 	 * @global WP_Post_Type $post_type_object
-	 * @global wpdb         $wpdb
+	 * @global wpdb         $wpdb             WordPress database abstraction object.
 	 *
 	 * @param array $args An associative array of arguments.
 	 */
@@ -109,7 +109,8 @@ class WP_Posts_List_Table extends WP_List_Table {
 			$_GET['author'] = get_current_user_id();
 		}
 
-		if ( 'post' === $post_type && $sticky_posts = get_option( 'sticky_posts' ) ) {
+		$sticky_posts = get_option( 'sticky_posts' );
+		if ( 'post' === $post_type && $sticky_posts ) {
 			$sticky_posts             = implode( ', ', array_map( 'absint', (array) $sticky_posts ) );
 			$this->sticky_posts_count = $wpdb->get_var( $wpdb->prepare( "SELECT COUNT( 1 ) FROM $wpdb->posts WHERE post_type = %s AND post_status NOT IN ('trash', 'auto-draft') AND ID IN ($sticky_posts)", $post_type ) );
 		}
@@ -135,7 +136,7 @@ class WP_Posts_List_Table extends WP_List_Table {
 
 	/**
 	 * @global array    $avail_post_stati
-	 * @global WP_Query $wp_query
+	 * @global WP_Query $wp_query         WordPress Query object.
 	 * @global int      $per_page
 	 * @global string   $mode
 	 */
@@ -243,7 +244,8 @@ class WP_Posts_List_Table extends WP_List_Table {
 	protected function get_edit_link( $args, $label, $class = '' ) {
 		$url = add_query_arg( $args, 'edit.php' );
 
-		$class_html = $aria_current = '';
+		$class_html   = '';
+		$aria_current = '';
 		if ( ! empty( $class ) ) {
 			$class_html = sprintf(
 				' class="%s"',
@@ -693,7 +695,7 @@ class WP_Posts_List_Table extends WP_List_Table {
 	}
 
 	/**
-	 * @global WP_Query $wp_query
+	 * @global WP_Query $wp_query WordPress Query object.
 	 * @global int $per_page
 	 * @param array $posts
 	 * @param int $level
@@ -738,8 +740,8 @@ class WP_Posts_List_Table extends WP_List_Table {
 	}
 
 	/**
-	 * @global wpdb    $wpdb
-	 * @global WP_Post $post
+	 * @global wpdb    $wpdb WordPress database abstraction object.
+	 * @global WP_Post $post Global post object.
 	 * @param array $pages
 	 * @param int $pagenum
 	 * @param int $per_page
@@ -915,9 +917,7 @@ class WP_Posts_List_Table extends WP_List_Table {
 		if ( current_user_can( 'edit_post', $post->ID ) ) :
 			?>
 			<label class="screen-reader-text" for="cb-select-<?php the_ID(); ?>">
-																				<?php
-																				printf( __( 'Select %s' ), _draft_or_post_title() );
-																				?>
+				<?php printf( __( 'Select %s' ), _draft_or_post_title() ); ?>
 			</label>
 			<input id="cb-select-<?php the_ID(); ?>" type="checkbox" name="post[]" value="<?php the_ID(); ?>" />
 			<div class="locked-indicator">
@@ -995,7 +995,8 @@ class WP_Posts_List_Table extends WP_List_Table {
 				$locked_avatar = get_avatar( $lock_holder->ID, 18 );
 				$locked_text   = esc_html( sprintf( __( '%s is currently editing' ), $lock_holder->display_name ) );
 			} else {
-				$locked_avatar = $locked_text = '';
+				$locked_avatar = '';
+				$locked_text   = '';
 			}
 
 			echo '<div class="locked-info"><span class="locked-avatar">' . $locked_avatar . '</span> <span class="locked-text">' . $locked_text . "</span></div>\n";
@@ -1054,7 +1055,8 @@ class WP_Posts_List_Table extends WP_List_Table {
 		global $mode;
 
 		if ( '0000-00-00 00:00:00' === $post->post_date ) {
-			$t_time    = $h_time = __( 'Unpublished' );
+			$t_time    = __( 'Unpublished' );
+			$h_time    = $t_time;
 			$time_diff = 0;
 		} else {
 			$t_time = get_the_time( __( 'Y/m/d g:i:s a' ) );
@@ -1258,7 +1260,7 @@ class WP_Posts_List_Table extends WP_List_Table {
 	}
 
 	/**
-	 * @global WP_Post $post
+	 * @global WP_Post $post Global post object.
 	 *
 	 * @param int|WP_Post $post
 	 * @param int         $level
@@ -1574,7 +1576,8 @@ class WP_Posts_List_Table extends WP_List_Table {
 						$users_opt['show_option_none'] = __( '&mdash; No Change &mdash;' );
 					}
 
-					if ( $authors = wp_dropdown_users( $users_opt ) ) :
+					$authors = wp_dropdown_users( $users_opt );
+					if ( $authors ) :
 						$authors_dropdown  = '<label class="inline-edit-author">';
 						$authors_dropdown .= '<span class="title">' . __( 'Author' ) . '</span>';
 						$authors_dropdown .= $authors;
@@ -1861,8 +1864,8 @@ class WP_Posts_List_Table extends WP_List_Table {
 					 *
 					 * @since 2.7.0
 					 *
-					 * @param string  $column_name Name of the column to edit.
-					 * @param WP_Post $post_type   The post type slug.
+					 * @param string $column_name Name of the column to edit.
+					 * @param string $post_type   The post type slug.
 					 */
 					do_action( 'bulk_edit_custom_box', $column_name, $screen->post_type );
 				} else {
@@ -1874,7 +1877,7 @@ class WP_Posts_List_Table extends WP_List_Table {
 					 *
 					 * @param string $column_name Name of the column to edit.
 					 * @param string $post_type   The post type slug, or current screen name if this is a taxonomy list table.
-					 * @param string taxonomy     The taxonomy name, if any.
+					 * @param string $taxonomy    The taxonomy name, if any.
 					 */
 					do_action( 'quick_edit_custom_box', $column_name, $screen->post_type, '' );
 				}

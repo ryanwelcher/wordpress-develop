@@ -71,8 +71,8 @@ unset( $help );
 
 get_current_screen()->set_help_sidebar(
 	'<p><strong>' . __( 'For more information:' ) . '</strong></p>' .
-	'<p>' . __( '<a href="https://codex.wordpress.org/Users_Screen">Documentation on Managing Users</a>' ) . '</p>' .
-	'<p>' . __( '<a href="https://codex.wordpress.org/Roles_and_Capabilities">Descriptions of Roles and Capabilities</a>' ) . '</p>' .
+	'<p>' . __( '<a href="https://wordpress.org/support/article/users-screen/">Documentation on Managing Users</a>' ) . '</p>' .
+	'<p>' . __( '<a href="https://wordpress.org/support/article/roles-and-capabilities/">Descriptions of Roles and Capabilities</a>' ) . '</p>' .
 	'<p>' . __( '<a href="https://wordpress.org/support/">Support</a>' ) . '</p>'
 );
 
@@ -234,6 +234,12 @@ switch ( $wp_list_table->current_action() ) {
 			$userids = array_map( 'intval', (array) $_REQUEST['users'] );
 		}
 
+		$all_userids = $userids;
+
+		if ( in_array( $current_user->ID, $userids ) ) {
+			$userids = array_diff( $userids, array( $current_user->ID ) );
+		}
+
 		/**
 		 * Filters whether the users being deleted have additional content
 		 * associated with them outside of the `post_author` and `link_owner` relationships.
@@ -245,7 +251,7 @@ switch ( $wp_list_table->current_action() ) {
 		 */
 		$users_have_content = (bool) apply_filters( 'users_have_additional_content', false, $userids );
 
-		if ( ! $users_have_content ) {
+		if ( $userids && ! $users_have_content ) {
 			if ( $wpdb->get_var( "SELECT ID FROM {$wpdb->posts} WHERE post_author IN( " . implode( ',', $userids ) . ' ) LIMIT 1' ) ) {
 				$users_have_content = true;
 			} elseif ( $wpdb->get_var( "SELECT link_id FROM {$wpdb->links} WHERE link_owner IN( " . implode( ',', $userids ) . ' ) LIMIT 1' ) ) {
@@ -271,7 +277,7 @@ switch ( $wp_list_table->current_action() ) {
 	</div>
 		<?php endif; ?>
 
-		<?php if ( 1 == count( $userids ) ) : ?>
+		<?php if ( 1 == count( $all_userids ) ) : ?>
 	<p><?php _e( 'You have specified this user for deletion:' ); ?></p>
 		<?php else : ?>
 	<p><?php _e( 'You have specified these users for deletion:' ); ?></p>
@@ -280,7 +286,7 @@ switch ( $wp_list_table->current_action() ) {
 <ul>
 		<?php
 		$go_delete = 0;
-		foreach ( $userids as $id ) {
+		foreach ( $all_userids as $id ) {
 			$user = get_userdata( $id );
 			if ( $id == $current_user->ID ) {
 				/* translators: 1: user id, 2: user login */
@@ -314,7 +320,7 @@ switch ( $wp_list_table->current_action() ) {
 				wp_dropdown_users(
 					array(
 						'name'    => 'reassign_user',
-						'exclude' => array_diff( $userids, array( $current_user->ID ) ),
+						'exclude' => $userids,
 						'show'    => 'display_name_with_login',
 					)
 				);
@@ -454,7 +460,7 @@ switch ( $wp_list_table->current_action() ) {
 			$sendback = wp_get_referer();
 
 			/** This action is documented in wp-admin/edit-comments.php */
-			$sendback = apply_filters( 'handle_bulk_actions-' . get_current_screen()->id, $sendback, $wp_list_table->current_action(), $userids );
+			$sendback = apply_filters( 'handle_bulk_actions-' . get_current_screen()->id, $sendback, $wp_list_table->current_action(), $userids ); // phpcs:ignore WordPress.NamingConventions.ValidHookName.UseUnderscores
 
 			wp_safe_redirect( $sendback );
 			exit;
@@ -483,21 +489,24 @@ switch ( $wp_list_table->current_action() ) {
 					$messages[] = '<div id="message" class="updated notice is-dismissible"><p>' . sprintf( $message, number_format_i18n( $delete_count ) ) . '</p></div>';
 					break;
 				case 'add':
-					if ( isset( $_GET['id'] ) && ( $user_id = $_GET['id'] ) && current_user_can( 'edit_user', $user_id ) ) {
-						/* translators: %s: edit page url */
-						$messages[] = '<div id="message" class="updated notice is-dismissible"><p>' . sprintf(
-							__( 'New user created. <a href="%s">Edit user</a>' ),
+					$message = __( 'New user created.' );
+
+					$user_id = isset( $_GET['id'] ) ? $_GET['id'] : false;
+					if ( $user_id && current_user_can( 'edit_user', $user_id ) ) {
+						$message .= sprintf(
+							' <a href="%s">%s</a>',
 							esc_url(
 								add_query_arg(
 									'wp_http_referer',
 									urlencode( wp_unslash( $_SERVER['REQUEST_URI'] ) ),
 									self_admin_url( 'user-edit.php?user_id=' . $user_id )
 								)
-							)
-						) . '</p></div>';
-					} else {
-						$messages[] = '<div id="message" class="updated notice is-dismissible"><p>' . __( 'New user created.' ) . '</p></div>';
+							),
+							__( 'Edit user' )
+						);
 					}
+
+					$messages[] = '<div id="message" class="updated notice is-dismissible"><p>' . $message . '</p></div>';
 					break;
 				case 'promote':
 					$messages[] = '<div id="message" class="updated notice is-dismissible"><p>' . __( 'Changed roles.' ) . '</p></div>';

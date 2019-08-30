@@ -206,9 +206,12 @@ function add_user_to_blog( $blog_id, $user_id, $role ) {
 	 * @param int    $blog_id Blog ID.
 	 */
 	do_action( 'add_user_to_blog', $user_id, $role, $blog_id );
-	wp_cache_delete( $user_id, 'users' );
+
+	clean_user_cache( $user_id );
 	wp_cache_delete( $blog_id . '_user_count', 'blog-details' );
+
 	restore_current_blog();
+
 	return true;
 }
 
@@ -583,7 +586,7 @@ function wpmu_validate_user_signup( $user_name, $user_email ) {
  *
  * @since MU (3.0.0)
  *
- * @global wpdb   $wpdb
+ * @global wpdb   $wpdb   WordPress database abstraction object.
  * @global string $domain
  *
  * @param string         $blogname   The blog name provided by the user. Must be unique.
@@ -2024,21 +2027,24 @@ function signup_nonce_check( $result ) {
  * @since MU (3.0.0)
  */
 function maybe_redirect_404() {
-	/**
-	 * Filters the redirect URL for 404s on the main site.
-	 *
-	 * The filter is only evaluated if the NOBLOGREDIRECT constant is defined.
-	 *
-	 * @since 3.0.0
-	 *
-	 * @param string $no_blog_redirect The redirect URL defined in NOBLOGREDIRECT.
-	 */
-	if ( is_main_site() && is_404() && defined( 'NOBLOGREDIRECT' ) && ( $destination = apply_filters( 'blog_redirect_404', NOBLOGREDIRECT ) ) ) {
-		if ( $destination == '%siteurl%' ) {
-			$destination = network_home_url();
+	if ( is_main_site() && is_404() && defined( 'NOBLOGREDIRECT' ) ) {
+		/**
+		 * Filters the redirect URL for 404s on the main site.
+		 *
+		 * The filter is only evaluated if the NOBLOGREDIRECT constant is defined.
+		 *
+		 * @since 3.0.0
+		 *
+		 * @param string $no_blog_redirect The redirect URL defined in NOBLOGREDIRECT.
+		 */
+		$destination = apply_filters( 'blog_redirect_404', NOBLOGREDIRECT );
+		if ( $destination ) {
+			if ( $destination == '%siteurl%' ) {
+				$destination = network_home_url();
+			}
+			wp_redirect( $destination );
+			exit();
 		}
-		wp_redirect( $destination );
-		exit();
 	}
 }
 
@@ -2252,7 +2258,7 @@ function force_ssl_content( $force = '' ) {
  * @param string $url URL
  * @return string URL with https as the scheme
  */
-function filter_SSL( $url ) {
+function filter_SSL( $url ) {  // phpcs:ignore WordPress.NamingConventions.ValidFunctionName.FunctionNameInvalid
 	if ( ! is_string( $url ) ) {
 		return get_bloginfo( 'url' ); // Return home blog url with proper scheme
 	}

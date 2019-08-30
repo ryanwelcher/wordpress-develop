@@ -150,7 +150,7 @@ class Tests_Widgets extends WP_UnitTestCase {
 
 		$names = wp_list_pluck( $wp_registered_sidebars, 'name' );
 		for ( $i = 1; $i <= $num; $i++ ) {
-			if ( in_array( "$id_base $i", $names ) ) {
+			if ( in_array( "$id_base $i", $names, true ) ) {
 				$result[] = true;
 			}
 		}
@@ -710,6 +710,22 @@ class Tests_Widgets extends WP_UnitTestCase {
 	function test_the_widget_with_unregistered_widget() {
 		$this->setExpectedIncorrectUsage( 'the_widget' );
 		the_widget( 'Widget_Class' );
+	}
+
+	/**
+	 * @ticket 34226
+	 */
+	public function test_the_widget_should_short_circuit_with_widget_display_callback() {
+		add_filter( 'widget_display_callback', '__return_false' );
+
+		register_widget( 'WP_Widget_Text' );
+
+		ob_start();
+		the_widget( 'WP_Widget_Text' );
+		$widget_content = ob_get_clean();
+		unregister_widget( 'WP_Widget_Text' );
+
+		$this->assertEmpty( $widget_content );
 	}
 
 	/**

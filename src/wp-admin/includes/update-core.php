@@ -536,7 +536,8 @@ $_old_files = array(
 	'wp-admin/images/screenshots/twitter-embed-1.png',
 	'wp-admin/images/screenshots/twitter-embed-2.png',
 	'wp-admin/js/utils.js',
-	'wp-admin/options-privacy.php',
+	// Added back in 5.3 [45448], see #43895
+	// 'wp-admin/options-privacy.php',
 	'wp-app.php',
 	'wp-includes/class-wp-atom-server.php',
 	'wp-includes/js/tinymce/themes/advanced/skins/wp_theme/ui.css',
@@ -868,7 +869,7 @@ $_new_bundled_files = array(
  * @global WP_Filesystem_Base $wp_filesystem          WordPress filesystem subclass.
  * @global array              $_old_files
  * @global array              $_new_bundled_files
- * @global wpdb               $wpdb
+ * @global wpdb               $wpdb                   WordPress database abstraction object.
  * @global string             $wp_version
  * @global string             $required_php_version
  * @global string             $required_mysql_version
@@ -880,7 +881,7 @@ $_new_bundled_files = array(
 function update_core( $from, $to ) {
 	global $wp_filesystem, $_old_files, $_new_bundled_files, $wpdb;
 
-	@set_time_limit( 300 );
+	set_time_limit( 300 );
 
 	/**
 	 * Filters feedback messages displayed during the core update process.
@@ -946,10 +947,23 @@ function update_core( $from, $to ) {
 		$wp_filesystem->delete( $from, true );
 	}
 
+	$php_update_message = '';
+	if ( function_exists( 'wp_get_update_php_url' ) ) {
+		/* translators: %s: Update PHP page URL */
+		$php_update_message = '</p><p>' . sprintf( __( '<a href="%s">Learn more about updating PHP</a>.' ), esc_url( wp_get_update_php_url() ) );
+
+		if ( function_exists( 'wp_get_update_php_annotation' ) ) {
+			$annotation = wp_get_update_php_annotation();
+			if ( $annotation ) {
+				$php_update_message .= '</p><p><em>' . $annotation . '</em>';
+			}
+		}
+	}
+
 	if ( ! $mysql_compat && ! $php_compat ) {
-		return new WP_Error( 'php_mysql_not_compatible', sprintf( __( 'The update cannot be installed because WordPress %1$s requires PHP version %2$s or higher and MySQL version %3$s or higher. You are running PHP version %4$s and MySQL version %5$s.' ), $wp_version, $required_php_version, $required_mysql_version, $php_version, $mysql_version ) );
+		return new WP_Error( 'php_mysql_not_compatible', sprintf( __( 'The update cannot be installed because WordPress %1$s requires PHP version %2$s or higher and MySQL version %3$s or higher. You are running PHP version %4$s and MySQL version %5$s.' ), $wp_version, $required_php_version, $required_mysql_version, $php_version, $mysql_version ) . $php_update_message );
 	} elseif ( ! $php_compat ) {
-		return new WP_Error( 'php_not_compatible', sprintf( __( 'The update cannot be installed because WordPress %1$s requires PHP version %2$s or higher. You are running version %3$s.' ), $wp_version, $required_php_version, $php_version ) );
+		return new WP_Error( 'php_not_compatible', sprintf( __( 'The update cannot be installed because WordPress %1$s requires PHP version %2$s or higher. You are running version %3$s.' ), $wp_version, $required_php_version, $php_version ) . $php_update_message );
 	} elseif ( ! $mysql_compat ) {
 		return new WP_Error( 'mysql_not_compatible', sprintf( __( 'The update cannot be installed because WordPress %1$s requires MySQL version %2$s or higher. You are running version %3$s.' ), $wp_version, $required_mysql_version, $mysql_version ) );
 	}

@@ -542,7 +542,7 @@ class WP_Plugins_List_Table extends WP_List_Table {
 		} elseif ( 'top' === $which && 'dropins' === $status ) {
 			echo '<p>' . sprintf(
 				/* translators: %s: wp-content directory name */
-				__( 'Drop-ins are advanced plugins in the %s directory that replace WordPress functionality when present.' ),
+				__( 'Drop-ins are single files, found in the %s directory, that replace or enhance WordPress features in ways that are not possible for traditional plugins.' ),
 				'<code>' . str_replace( ABSPATH, '', WP_CONTENT_DIR ) . '</code>'
 			) . '</p>';
 		}
@@ -761,7 +761,7 @@ class WP_Plugins_List_Table extends WP_List_Table {
 
 		}
 
-		$requires_php   = isset( $plugin['requires_php'] ) ? $plugin['requires_php'] : null;
+		$requires_php   = isset( $plugin_data['requires_php'] ) ? $plugin_data['requires_php'] : null;
 		$compatible_php = is_php_version_compatible( $requires_php );
 		$class          = $is_active ? 'active' : 'inactive';
 		$checkbox_id    = 'checkbox_' . md5( $plugin_data['Name'] );

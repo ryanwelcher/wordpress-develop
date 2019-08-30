@@ -232,7 +232,7 @@ final class WP_Customize_Manager {
 	 * Changeset data loaded from a customize_changeset post.
 	 *
 	 * @since 4.7.0
-	 * @var array
+	 * @var array|null
 	 */
 	private $_changeset_data;
 
@@ -3341,7 +3341,7 @@ final class WP_Customize_Manager {
 	 *
 	 * @since 4.7.0
 	 * @see _wp_customize_publish_changeset()
-	 * @global wpdb $wpdb
+	 * @global wpdb $wpdb WordPress database abstraction object.
 	 *
 	 * @param int $changeset_post_id ID for customize_changeset post. Defaults to the changeset for the current manager instance.
 	 * @return true|WP_Error True or error info.
@@ -5098,10 +5098,10 @@ final class WP_Customize_Manager {
 					'label'         => __( 'Logo' ),
 					'section'       => 'title_tagline',
 					'priority'      => 8,
-					'height'        => $custom_logo_args[0]['height'],
-					'width'         => $custom_logo_args[0]['width'],
-					'flex_height'   => $custom_logo_args[0]['flex-height'],
-					'flex_width'    => $custom_logo_args[0]['flex-width'],
+					'height'        => isset( $custom_logo_args[0]['height'] ) ? $custom_logo_args[0]['height'] : null,
+					'width'         => isset( $custom_logo_args[0]['width'] ) ? $custom_logo_args[0]['width'] : null,
+					'flex_height'   => isset( $custom_logo_args[0]['flex-height'] ) ? $custom_logo_args[0]['flex-height'] : null,
+					'flex_width'    => isset( $custom_logo_args[0]['flex-width'] ) ? $custom_logo_args[0]['flex-width'] : null,
 					'button_labels' => array(
 						'select'       => __( 'Select logo' ),
 						'change'       => __( 'Change logo' ),
@@ -5436,7 +5436,7 @@ final class WP_Customize_Manager {
 				'section' => 'background_image',
 				'type'    => 'select',
 				'choices' => array(
-					'auto'    => __( 'Original' ),
+					'auto'    => _x( 'Original', 'Original Size' ),
 					'contain' => __( 'Fit to Screen' ),
 					'cover'   => __( 'Fill Screen' ),
 				),
@@ -5577,7 +5577,7 @@ final class WP_Customize_Manager {
 		$section_description .= '<ul>';
 		$section_description .= '<li id="editor-keyboard-trap-help-2">' . __( 'In the editing area, the Tab key enters a tab character.' ) . '</li>';
 		$section_description .= '<li id="editor-keyboard-trap-help-3">' . __( 'To move away from this area, press the Esc key followed by the Tab key.' ) . '</li>';
-		$section_description .= '<li id="editor-keyboard-trap-help-4">' . __( 'Screen reader users: when in forms mode, you may need to press the escape key twice.' ) . '</li>';
+		$section_description .= '<li id="editor-keyboard-trap-help-4">' . __( 'Screen reader users: when in forms mode, you may need to press the Esc key twice.' ) . '</li>';
 		$section_description .= '</ul>';
 
 		if ( 'false' !== wp_get_current_user()->syntax_highlighting ) {

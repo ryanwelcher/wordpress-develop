@@ -209,8 +209,6 @@ add_filter( 'widget_text_content', 'wpautop' );
 add_filter( 'widget_text_content', 'shortcode_unautop' );
 add_filter( 'widget_text_content', 'do_shortcode', 11 ); // Runs after wpautop(); note that $post global will be null when shortcodes run.
 
-add_filter( 'date_i18n', 'wp_maybe_decline_date' );
-
 // RSS filters
 add_filter( 'the_title_rss', 'strip_tags' );
 add_filter( 'the_title_rss', 'ent2ncr', 8 );
@@ -580,5 +578,6 @@ add_filter( 'pre_oembed_result', 'wp_filter_pre_oembed_result', 10, 3 );
 // Capabilities
 add_filter( 'user_has_cap', 'wp_maybe_grant_install_languages_cap', 1 );
 add_filter( 'user_has_cap', 'wp_maybe_grant_resume_extensions_caps', 1 );
+add_filter( 'user_has_cap', 'wp_maybe_grant_site_health_caps', 1, 4 );
 
 unset( $filter, $action );

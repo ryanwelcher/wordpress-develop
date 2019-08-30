@@ -11,13 +11,13 @@
  * functions.php file. The child theme's functions.php file is included before
  * the parent theme's file, so the child theme functions would be used.
  *
- * @link https://codex.wordpress.org/Theme_Development
+ * @link https://developer.wordpress.org/themes/basics/theme-functions/
  * @link https://developer.wordpress.org/themes/advanced-topics/child-themes/
  *
  * Functions that are not pluggable (not wrapped in function_exists()) are instead attached
  * to a filter or action hook.
  *
- * For more information on hooks, actions, and filters, @link https://codex.wordpress.org/Plugin_API
+ * For more information on hooks, actions, and filters, @link https://developer.wordpress.org/plugins/
  *
  * @package WordPress
  * @subpackage Twenty_Twelve
@@ -165,8 +165,9 @@ function twentytwelve_get_font_url() {
 		}
 
 		$query_args = array(
-			'family' => 'Open+Sans:400italic,700italic,400,700',
-			'subset' => $subsets,
+			'family'  => urlencode( 'Open Sans:400italic,700italic,400,700' ),
+			'subset'  => urlencode( $subsets ),
+			'display' => urlencode( 'fallback' ),
 		);
 		$font_url   = add_query_arg( $query_args, 'https://fonts.googleapis.com/css' );
 	}
@@ -191,7 +192,7 @@ function twentytwelve_scripts_styles() {
 	}
 
 	// Adds JavaScript for handling the navigation menu hide-and-show behavior.
-	wp_enqueue_script( 'twentytwelve-navigation', get_template_directory_uri() . '/js/navigation.js', array( 'jquery' ), '20140711', true );
+	wp_enqueue_script( 'twentytwelve-navigation', get_template_directory_uri() . '/js/navigation.js', array( 'jquery' ), '20141205', true );
 
 	$font_url = twentytwelve_get_font_url();
 	if ( ! empty( $font_url ) ) {
@@ -199,13 +200,13 @@ function twentytwelve_scripts_styles() {
 	}
 
 	// Loads our main stylesheet.
-	wp_enqueue_style( 'twentytwelve-style', get_stylesheet_uri() );
+	wp_enqueue_style( 'twentytwelve-style', get_stylesheet_uri(), array(), '20190507' );
 
 	// Theme block stylesheet.
-	wp_enqueue_style( 'twentytwelve-block-style', get_template_directory_uri() . '/css/blocks.css', array( 'twentytwelve-style' ), '20181230' );
+	wp_enqueue_style( 'twentytwelve-block-style', get_template_directory_uri() . '/css/blocks.css', array( 'twentytwelve-style' ), '20190406' );
 
 	// Loads the Internet Explorer specific stylesheet.
-	wp_enqueue_style( 'twentytwelve-ie', get_template_directory_uri() . '/css/ie.css', array( 'twentytwelve-style' ), '20121010' );
+	wp_enqueue_style( 'twentytwelve-ie', get_template_directory_uri() . '/css/ie.css', array( 'twentytwelve-style' ), '20150214' );
 	$wp_styles->add_data( 'twentytwelve-ie', 'conditional', 'lt IE 9' );
 }
 add_action( 'wp_enqueue_scripts', 'twentytwelve_scripts_styles' );
@@ -217,7 +218,7 @@ add_action( 'wp_enqueue_scripts', 'twentytwelve_scripts_styles' );
  */
 function twentytwelve_block_editor_styles() {
 	// Block styles.
-	wp_enqueue_style( 'twentytwelve-block-editor-style', get_template_directory_uri() . '/css/editor-blocks.css', array(), '20181230' );
+	wp_enqueue_style( 'twentytwelve-block-editor-style', get_template_directory_uri() . '/css/editor-blocks.css', array(), '20190406' );
 	// Add custom fonts.
 	wp_enqueue_style( 'twentytwelve-fonts', twentytwelve_get_font_url(), array(), null );
 }
@@ -307,6 +308,7 @@ function twentytwelve_wp_title( $title, $sep ) {
 
 	// Add a page number if necessary.
 	if ( ( $paged >= 2 || $page >= 2 ) && ! is_404() ) {
+		/* translators: %s: page number */
 		$title = "$title $sep " . sprintf( __( 'Page %s', 'twentytwelve' ), max( $paged, $page ) );
 	}
 
@@ -501,16 +503,19 @@ if ( ! function_exists( 'twentytwelve_entry_meta' ) ) :
 		$author = sprintf(
 			'<span class="author vcard"><a class="url fn n" href="%1$s" title="%2$s" rel="author">%3$s</a></span>',
 			esc_url( get_author_posts_url( get_the_author_meta( 'ID' ) ) ),
+			/* translators: %s: author display name */
 			esc_attr( sprintf( __( 'View all posts by %s', 'twentytwelve' ), get_the_author() ) ),
 			get_the_author()
 		);
 
-		// Translators: 1 is category, 2 is tag, 3 is the date and 4 is the author's name.
 		if ( $tag_list ) {
+			/* translators: 1: category name, 2: tag name, 3: date, 4: author display name */
 			$utility_text = __( 'This entry was posted in %1$s and tagged %2$s on %3$s<span class="by-author"> by %4$s</span>.', 'twentytwelve' );
 		} elseif ( $categories_list ) {
+			/* translators: 1: category name, 3: date, 4: author display name */
 			$utility_text = __( 'This entry was posted in %1$s on %3$s<span class="by-author"> by %4$s</span>.', 'twentytwelve' );
 		} else {
+			/* translators: 3: date, 4: author display name */
 			$utility_text = __( 'This entry was posted on %3$s<span class="by-author"> by %4$s</span>.', 'twentytwelve' );
 		}
 

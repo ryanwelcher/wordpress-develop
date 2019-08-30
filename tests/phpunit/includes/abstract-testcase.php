@@ -706,8 +706,9 @@ abstract class WP_UnitTestCase_Base extends PHPUnit_Framework_TestCase {
 		// note: the WP and WP_Query classes like to silently fetch parameters
 		// from all over the place (globals, GET, etc), which makes it tricky
 		// to run them more than once without very carefully clearing everything
-		$_GET = $_POST = array();
-		foreach ( array( 'query_string', 'id', 'postdata', 'authordata', 'day', 'currentmonth', 'page', 'pages', 'multipage', 'more', 'numpages', 'pagenow' ) as $v ) {
+		$_GET  = array();
+		$_POST = array();
+		foreach ( array( 'query_string', 'id', 'postdata', 'authordata', 'day', 'currentmonth', 'page', 'pages', 'multipage', 'more', 'numpages', 'pagenow', 'current_screen' ) as $v ) {
 			if ( isset( $GLOBALS[ $v ] ) ) {
 				unset( $GLOBALS[ $v ] );
 			}
@@ -908,7 +909,7 @@ abstract class WP_UnitTestCase_Base extends PHPUnit_Framework_TestCase {
 	 * @since 2.5.0
 	 * @since 3.8.0 Moved from `Tests_Query_Conditionals` to `WP_UnitTestCase`.
 	 *
-	 * @param string $prop,... Any number of WP_Query properties that are expected to be true for the current request.
+	 * @param string ...$prop Any number of WP_Query properties that are expected to be true for the current request.
 	 */
 	public function assertQueryTrue() {
 		global $wp_query;

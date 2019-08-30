@@ -25,7 +25,7 @@ if ( ! current_user_can( 'update_core' ) && ! current_user_can( 'update_themes' 
 
 /**
  * @global string $wp_local_package
- * @global wpdb   $wpdb
+ * @global wpdb   $wpdb             WordPress database abstraction object.
  *
  * @staticvar bool $first_pass
  *
@@ -35,15 +35,17 @@ function list_core_update( $update ) {
 	global $wp_local_package, $wpdb;
 	static $first_pass = true;
 
-	$wp_version = get_bloginfo( 'version' );
+	$wp_version     = get_bloginfo( 'version' );
+	$version_string = sprintf( '%s&ndash;<strong>%s</strong>', $update->current, $update->locale );
 
 	if ( 'en_US' == $update->locale && 'en_US' == get_locale() ) {
 		$version_string = $update->current;
-	} elseif ( 'en_US' == $update->locale && $update->packages->partial && $wp_version == $update->partial_version && ( $updates = get_core_updates() ) && 1 == count( $updates ) ) {
-		// If the only available update is a partial builds, it doesn't need a language-specific version string.
-		$version_string = $update->current;
-	} else {
-		$version_string = sprintf( '%s&ndash;<strong>%s</strong>', $update->current, $update->locale );
+	} elseif ( 'en_US' == $update->locale && $update->packages->partial && $wp_version == $update->partial_version ) {
+		$updates = get_core_updates();
+		if ( $updates && 1 == count( $updates ) ) {
+			// If the only available update is a partial builds, it doesn't need a language-specific version string.
+			$version_string = $update->current;
+		}
 	}
 
 	$current = false;
@@ -76,12 +78,20 @@ function list_core_update( $update ) {
 				sanitize_title( $update->current )
 			);
 
+			/* translators: %s: Update PHP page URL */
+			$php_update_message = '</p><p>' . sprintf( __( '<a href="%s">Learn more about updating PHP</a>.' ), esc_url( wp_get_update_php_url() ) );
+
+			$annotation = wp_get_update_php_annotation();
+			if ( $annotation ) {
+				$php_update_message .= '</p><p><em>' . $annotation . '</em>';
+			}
+
 			if ( ! $mysql_compat && ! $php_compat ) {
 				/* translators: 1: URL to WordPress release notes, 2: WordPress version number, 3: Minimum required PHP version number, 4: Minimum required MySQL version number, 5: Current PHP version number, 6: Current MySQL version number */
-				$message = sprintf( __( 'You cannot update because <a href="%1$s">WordPress %2$s</a> requires PHP version %3$s or higher and MySQL version %4$s or higher. You are running PHP version %5$s and MySQL version %6$s.' ), $version_url, $update->current, $update->php_version, $update->mysql_version, $php_version, $mysql_version );
+				$message = sprintf( __( 'You cannot update because <a href="%1$s">WordPress %2$s</a> requires PHP version %3$s or higher and MySQL version %4$s or higher. You are running PHP version %5$s and MySQL version %6$s.' ), $version_url, $update->current, $update->php_version, $update->mysql_version, $php_version, $mysql_version ) . $php_update_message;
 			} elseif ( ! $php_compat ) {
 				/* translators: 1: URL to WordPress release notes, 2: WordPress version number, 3: Minimum required PHP version number, 4: Current PHP version number */
-				$message = sprintf( __( 'You cannot update because <a href="%1$s">WordPress %2$s</a> requires PHP version %3$s or higher. You are running version %4$s.' ), $version_url, $update->current, $update->php_version, $php_version );
+				$message = sprintf( __( 'You cannot update because <a href="%1$s">WordPress %2$s</a> requires PHP version %3$s or higher. You are running version %4$s.' ), $version_url, $update->current, $update->php_version, $php_version ) . $php_update_message;
 			} elseif ( ! $mysql_compat ) {
 				/* translators: 1: URL to WordPress release notes, 2: WordPress version number, 3: Minimum required MySQL version number, 4: Current MySQL version number */
 				$message = sprintf( __( 'You cannot update because <a href="%1$s">WordPress %2$s</a> requires MySQL version %3$s or higher. You are running version %4$s.' ), $version_url, $update->current, $update->mysql_version, $mysql_version );
@@ -196,9 +206,11 @@ function core_upgrade_preamble() {
 			}
 		}
 		echo '</h2>';
-	} else {
+	}
+
+	if ( isset( $updates[0]->version ) && version_compare( $updates[0]->version, $wp_version, '>' ) ) {
 		echo '<div class="notice notice-warning"><p>';
-		_e( '<strong>Important:</strong> Before updating, please <a href="https://codex.wordpress.org/WordPress_Backups">back up your database and files</a>. For help with updates, visit the <a href="https://codex.wordpress.org/Updating_WordPress">Updating WordPress</a> Codex page.' );
+		_e( '<strong>Important:</strong> Before updating, please <a href="https://wordpress.org/support/article/wordpress-backups/">back up your database and files</a>. For help with updates, visit the <a href="https://wordpress.org/support/article/updating-wordpress/">Updating WordPress</a> documentation page.' );
 		echo '</p></div>';
 
 		echo '<h2 class="response">';
@@ -233,6 +245,11 @@ function core_upgrade_preamble() {
 	dismissed_updates();
 }
 
+/**
+ * Display the upgrade plugins form.
+ *
+ * @since 2.7.0
+ */
 function list_plugin_updates() {
 	$wp_version     = get_bloginfo( 'version' );
 	$cur_wp_version = preg_replace( '/-.*$/', '', $wp_version );
@@ -522,7 +539,8 @@ function do_core_upgrade( $reinstall = false ) {
 	<h1><?php _e( 'Update WordPress' ); ?></h1>
 	<?php
 
-	if ( false === ( $credentials = request_filesystem_credentials( $url, '', false, ABSPATH, array( 'version', 'locale' ), $allow_relaxed_file_ownership ) ) ) {
+	$credentials = request_filesystem_credentials( $url, '', false, ABSPATH, array( 'version', 'locale' ), $allow_relaxed_file_ownership );
+	if ( false === $credentials ) {
 		echo '</div>';
 		return;
 	}
@@ -646,7 +664,7 @@ get_current_screen()->add_help_tab(
 
 get_current_screen()->set_help_sidebar(
 	'<p><strong>' . __( 'For more information:' ) . '</strong></p>' .
-	'<p>' . __( '<a href="https://codex.wordpress.org/Dashboard_Updates_Screen">Documentation on Updating WordPress</a>' ) . '</p>' .
+	'<p>' . __( '<a href="https://wordpress.org/support/article/dashboard-updates-screen/">Documentation on Updating WordPress</a>' ) . '</p>' .
 	'<p>' . __( '<a href="https://wordpress.org/support/">Support</a>' ) . '</p>'
 );
 
@@ -867,5 +885,5 @@ if ( 'upgrade-core' == $action ) {
 	 *
 	 * @since 3.2.0
 	 */
-	do_action( "update-core-custom_{$action}" );
+	do_action( "update-core-custom_{$action}" );  // phpcs:ignore WordPress.NamingConventions.ValidHookName.UseUnderscores
 }

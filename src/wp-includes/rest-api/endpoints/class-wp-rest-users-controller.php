@@ -498,7 +498,8 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 					foreach ( $messages as $message ) {
 						$error->add( $code, $message );
 					}
-					if ( $error_data = $error->get_error_data( $code ) ) {
+					$error_data = $error->get_error_data( $code );
+					if ( $error_data ) {
 						$error->add_data( $error_data, $code );
 					}
 				}
@@ -925,7 +926,7 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 		}
 
 		if ( in_array( 'registered_date', $fields, true ) ) {
-			$data['registered_date'] = date( 'c', strtotime( $user->user_registered ) );
+			$data['registered_date'] = gmdate( 'c', strtotime( $user->user_registered ) );
 		}
 
 		if ( in_array( 'capabilities', $fields, true ) ) {
@@ -937,7 +938,7 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 		}
 
 		if ( in_array( 'avatar_urls', $fields, true ) ) {
-			$data['avatar_urls'] = rest_get_avatar_urls( $user->user_email );
+			$data['avatar_urls'] = rest_get_avatar_urls( $user );
 		}
 
 		if ( in_array( 'meta', $fields, true ) ) {
@@ -1177,6 +1178,10 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 	 * @return array Item schema data.
 	 */
 	public function get_item_schema() {
+		if ( $this->schema ) {
+			return $this->add_additional_fields_schema( $this->schema );
+		}
+
 		$schema = array(
 			'$schema'    => 'http://json-schema.org/draft-04/schema#',
 			'title'      => 'user',
@@ -1333,7 +1338,8 @@ class WP_REST_Users_Controller extends WP_REST_Controller {
 
 		$schema['properties']['meta'] = $this->meta->get_field_schema();
 
-		return $this->add_additional_fields_schema( $schema );
+		$this->schema = $schema;
+		return $this->add_additional_fields_schema( $this->schema );
 	}
 
 	/**

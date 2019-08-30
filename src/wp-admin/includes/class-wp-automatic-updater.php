@@ -99,7 +99,8 @@ class WP_Automatic_Updater {
 		// Search all directories we've found for evidence of version control.
 		foreach ( $vcs_dirs as $vcs_dir ) {
 			foreach ( $check_dirs as $check_dir ) {
-				if ( $checkout = @is_dir( rtrim( $check_dir, '\\/' ) . "/$vcs_dir" ) ) {
+				$checkout = @is_dir( rtrim( $check_dir, '\\/' ) . "/$vcs_dir" );
+				if ( $checkout ) {
 					break 2;
 				}
 			}
@@ -738,7 +739,7 @@ class WP_Automatic_Updater {
 		} else {
 			// Add a note about the support forums.
 			$body .= "\n\n" . __( 'If you experience any issues or need support, the volunteers in the WordPress.org support forums may be able to help.' );
-			$body .= "\n" . __( 'https://wordpress.org/support/' );
+			$body .= "\n" . __( 'https://wordpress.org/support/forums/' );
 		}
 
 		// Updates are important!

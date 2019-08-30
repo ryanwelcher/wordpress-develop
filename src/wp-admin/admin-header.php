@@ -6,7 +6,7 @@
  * @subpackage Administration
  */
 
-@header( 'Content-Type: ' . get_option( 'html_type' ) . '; charset=' . get_option( 'blog_charset' ) );
+header( 'Content-Type: ' . get_option( 'html_type' ) . '; charset=' . get_option( 'blog_charset' ) );
 if ( ! defined( 'WP_ADMIN' ) ) {
 	require_once( dirname( __FILE__ ) . '/admin.php' );
 }
@@ -16,8 +16,8 @@ if ( ! defined( 'WP_ADMIN' ) ) {
  *
  * @global string    $title
  * @global string    $hook_suffix
- * @global WP_Screen $current_screen
- * @global WP_Locale $wp_locale
+ * @global WP_Screen $current_screen     WordPress current screen object.
+ * @global WP_Locale $wp_locale          WordPress date and time locale object.
  * @global string    $pagenow
  * @global string    $update_title
  * @global int       $total_update_count
@@ -108,7 +108,7 @@ do_action( 'admin_enqueue_scripts', $hook_suffix );
  *
  * @since 2.6.0
  */
-do_action( "admin_print_styles-{$hook_suffix}" );
+do_action( "admin_print_styles-{$hook_suffix}" ); // phpcs:ignore WordPress.NamingConventions.ValidHookName.UseUnderscores
 
 /**
  * Fires when styles are printed for all admin pages.
@@ -122,7 +122,7 @@ do_action( 'admin_print_styles' );
  *
  * @since 2.1.0
  */
-do_action( "admin_print_scripts-{$hook_suffix}" );
+do_action( "admin_print_scripts-{$hook_suffix}" ); // phpcs:ignore WordPress.NamingConventions.ValidHookName.UseUnderscores
 
 /**
  * Fires when scripts are printed for all admin pages.
@@ -139,7 +139,7 @@ do_action( 'admin_print_scripts' );
  *
  * @since 2.1.0
  */
-do_action( "admin_head-{$hook_suffix}" );
+do_action( "admin_head-{$hook_suffix}" ); // phpcs:ignore WordPress.NamingConventions.ValidHookName.UseUnderscores
 
 /**
  * Fires in head section for all admin pages.
