@@ -102,8 +102,8 @@ class Tests_Admin_includesPlugin extends WP_UnitTestCase {
 		$plugin = $this->_create_plugin( null, 'list_files_test_plugin.php', $plugin_dir );
 
 		$sub_dir = trailingslashit( dirname( $plugin[1] ) ) . 'subdir';
-		@mkdir( $sub_dir );
-		@file_put_contents( $sub_dir . '/subfile.php', '<?php // Silence.' );
+		mkdir( $sub_dir );
+		file_put_contents( $sub_dir . '/subfile.php', '<?php // Silence.' );
 
 		$plugin_files = get_plugin_files( plugin_basename( $plugin[1] ) );
 		$expected     = array(
@@ -406,7 +406,8 @@ class Tests_Admin_includesPlugin extends WP_UnitTestCase {
 			}
 
 			$files_to_move = array();
-			if ( $mu_plugins = opendir( WPMU_PLUGIN_DIR ) ) {
+			$mu_plugins    = opendir( WPMU_PLUGIN_DIR );
+			if ( $mu_plugins ) {
 				while ( false !== $plugin = readdir( $mu_plugins ) ) {
 					if ( 0 !== strpos( $plugin, '.' ) ) {
 						$files_to_move[] = $plugin;
@@ -414,7 +415,7 @@ class Tests_Admin_includesPlugin extends WP_UnitTestCase {
 				}
 			}
 
-			@closedir( $mu_plugins );
+			closedir( $mu_plugins );
 
 			foreach ( $files_to_move as $file_to_move ) {
 				$f = rename( WPMU_PLUGIN_DIR . '/' . $file_to_move, $mu_bu_dir . '/' . $file_to_move );
@@ -432,7 +433,8 @@ class Tests_Admin_includesPlugin extends WP_UnitTestCase {
 	private function _restore_mu_plugins() {
 		$mu_bu_dir     = WP_CONTENT_DIR . '/mu-plugin-backup';
 		$files_to_move = array();
-		if ( is_dir( $mu_bu_dir ) && $mu_plugins = opendir( $mu_bu_dir ) ) {
+		$mu_plugins    = @opendir( $mu_bu_dir );
+		if ( $mu_plugins ) {
 			while ( false !== $plugin = readdir( $mu_plugins ) ) {
 				if ( 0 !== strpos( $plugin, '.' ) ) {
 					$files_to_move[] = $plugin;
@@ -440,7 +442,7 @@ class Tests_Admin_includesPlugin extends WP_UnitTestCase {
 			}
 		}
 
-		@closedir( $mu_plugins );
+		closedir( $mu_plugins );
 
 		foreach ( $files_to_move as $file_to_move ) {
 			rename( $mu_bu_dir . '/' . $file_to_move, WPMU_PLUGIN_DIR . '/' . $file_to_move );

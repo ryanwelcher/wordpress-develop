@@ -86,6 +86,7 @@ AttachmentsBrowser = View.extend(/** @lends wp.media.view.AttachmentsBrowser.pro
 	},
 
 	editSelection: function( modal ) {
+		// When editing a selection, move focus to the "Return to library" button.
 		modal.$( '.media-button-backToLibrary' ).focus();
 	},
 
@@ -187,9 +188,9 @@ AttachmentsBrowser = View.extend(/** @lends wp.media.view.AttachmentsBrowser.pro
 				filters: Filters,
 				style: 'primary',
 				disabled: true,
-				text: mediaTrash ? l10n.trashSelected : l10n.deleteSelected,
+				text: mediaTrash ? l10n.trashSelected : l10n.deletePermanently,
 				controller: this.controller,
-				priority: -60,
+				priority: -80,
 				click: function() {
 					var changed = [], removed = [],
 						selection = this.controller.state().get( 'selection' ),
@@ -245,9 +246,9 @@ AttachmentsBrowser = View.extend(/** @lends wp.media.view.AttachmentsBrowser.pro
 			if ( mediaTrash ) {
 				this.toolbar.set( 'deleteSelectedPermanentlyButton', new wp.media.view.DeleteSelectedPermanentlyButton({
 					filters: Filters,
-					style: 'primary',
+					style: 'link button-link-delete',
 					disabled: true,
-					text: l10n.deleteSelected,
+					text: l10n.deletePermanently,
 					controller: this.controller,
 					priority: -55,
 					click: function() {

@@ -446,7 +446,7 @@ function get_post_embed_html( $width, $height, $post = null ) {
 	} else {
 		/*
 		 * If you're looking at a src version of this file, you'll see an "include"
-		 * statement below. This is used by the `grunt build` process to directly
+		 * statement below. This is used by the `npm run build` process to directly
 		 * include a minified version of wp-embed.js, instead of using the
 		 * file_get_contents() method from above.
 		 *
@@ -468,7 +468,7 @@ JS;
 		absint( $height ),
 		esc_attr(
 			sprintf(
-				/* translators: 1: post title, 2: site name */
+				/* translators: 1: Post title, 2: Site title. */
 				__( '&#8220;%1$s&#8221; &#8212; %2$s' ),
 				get_the_title( $post ),
 				get_bloginfo( 'name' )
@@ -929,7 +929,7 @@ function wp_embed_excerpt_more( $more_string ) {
 	$link = sprintf(
 		'<a href="%1$s" class="wp-embed-more" target="_top">%2$s</a>',
 		esc_url( get_permalink() ),
-		/* translators: %s: Name of current post */
+		/* translators: %s: Post title. */
 		sprintf( __( 'Continue reading %s' ), '<span class="screen-reader-text">' . get_the_title() . '</span>' )
 	);
 	return ' &hellip; ' . $link;
@@ -1008,7 +1008,7 @@ function print_embed_styles() {
 	} else {
 		/*
 		 * If you're looking at a src version of this file, you'll see an "include"
-		 * statement below. This is used by the `grunt build` process to directly
+		 * statement below. This is used by the `npm run build` process to directly
 		 * include a minified version of wp-oembed-embed.css, instead of using the
 		 * readfile() method from above.
 		 *
@@ -1039,7 +1039,7 @@ function print_embed_scripts() {
 	} else {
 		/*
 		 * If you're looking at a src version of this file, you'll see an "include"
-		 * statement below. This is used by the `grunt build` process to directly
+		 * statement below. This is used by the `npm run build` process to directly
 		 * include a minified version of wp-embed-template.js, instead of using the
 		 * readfile() method from above.
 		 *
@@ -1084,6 +1084,7 @@ function print_embed_comments_button() {
 			<span class="dashicons dashicons-admin-comments"></span>
 			<?php
 			printf(
+				/* translators: %s: Number of comments. */
 				_n(
 					'%s <span class="screen-reader-text">Comment</span>',
 					'%s <span class="screen-reader-text">Comments</span>',
