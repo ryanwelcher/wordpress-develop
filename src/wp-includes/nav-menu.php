@@ -92,6 +92,14 @@ function register_nav_menus( $locations = array() ) {
 
 	add_theme_support( 'menus' );
 
+	foreach ( $locations as $key => $value ) {
+		if ( is_int( $key ) ) {
+			$message = __( 'Strings should always be used for menu location slugs.' );
+			_doing_it_wrong( __FUNCTION__, $message, '5.3' );
+			break;
+		}
+	}
+
 	$_wp_registered_nav_menus = array_merge( (array) $_wp_registered_nav_menus, $locations );
 }
 
