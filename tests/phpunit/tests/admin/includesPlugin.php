@@ -60,6 +60,7 @@ class Tests_Admin_includesPlugin extends WP_UnitTestCase {
 	/**
 	 * Tests the priority parameter.
 	 *
+	 * @ticket 39776
 	 * @param int $priority          The position of the new item.
 	 * @param int $expected_position Where the new item is expected to appear.
 	 * @dataProvider data_submenu_priority
@@ -78,14 +79,14 @@ class Tests_Admin_includesPlugin extends WP_UnitTestCase {
 
 		// Insert the new page.
 		add_submenu_page( $parent, 'New Page', 'New Page', 'manage_options', 'custom-position', 'custom_pos' , $priority );
+		wp_set_current_user( $current_user );
 
 		$this->assertSame( 'custom-position', $submenu[ $parent ][ $expected_position ][2] );
-
-		wp_set_current_user( $current_user );
 	}
 
 	/**
-	 * Helper to store the menus to add so getting the length is programtically done.
+	 * Helper to store the menus to add so getting the length is programmatically done.
+	 * @since 5.3.0
 	 *
 	 * @return array
 	 */

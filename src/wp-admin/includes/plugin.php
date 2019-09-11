@@ -1387,9 +1387,9 @@ function add_submenu_page( $parent_slug, $page_title, $menu_title, $capability, 
 			} else {
 				// Grab all of the items before the insertion point.
 				$before_items = array_slice( $submenu[ $parent_slug ], 0, $position, true );
-				// Grab all of the items after the insertion point
+				// Grab all of the items after the insertion point.
 				$after_items = array_slice( $submenu[ $parent_slug ], $position, null, true );
-				// Add the new item
+				// Add the new item.
 				$before_items[] = $new_sub_menu;
 				// Merge the items.
 				$submenu[ $parent_slug ] = array_merge( $before_items, $after_items );
