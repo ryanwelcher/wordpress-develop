@@ -62,7 +62,6 @@ class Tests_Admin_includesPlugin extends WP_UnitTestCase {
 	 *
 	 * @param int $priority          The position of the new item.
 	 * @param int $expected_position Where the new item is expected to appear.
-	 *
 	 * @dataProvider data_submenu_priority
 	 */
 	function test_submenu_priority( $priority, $expected_position  ) {
