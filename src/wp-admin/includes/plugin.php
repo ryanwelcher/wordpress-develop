@@ -1376,15 +1376,21 @@ function add_submenu_page( $parent_slug, $page_title, $menu_title, $capability, 
 	if ( null === $position ) {
 		$submenu[ $parent_slug ][] = $new_sub_menu;
 	} else {
-		// If there is a position.
-		// Grab all of the items before the insertion point.
-		$before_items = array_slice( $submenu[ $parent_slug ], 0, $position, true );
-		// Grab all of the items after the insertion point
-		$after_items = array_slice( $submenu[ $parent_slug ], $position, null, true );
-		// Add the new item
-		$before_items[] = $new_sub_menu;
-		// Merge the items.
-		$submenu[ $parent_slug ] = array_merge( $before_items, $after_items );
+		// If position is equal or higher than the number of items in the array, just append it.
+		if ( $position >= count( $submenu[ $parent_slug ] ) ) {
+			$submenu[ $parent_slug ][] = $new_sub_menu;
+		} else {
+			// Ensure we don't have a negative position.
+			$position = max( $position, 0 );
+			// Grab all of the items before the insertion point.
+			$before_items = array_slice( $submenu[ $parent_slug ], 0, $position, true );
+			// Grab all of the items after the insertion point
+			$after_items = array_slice( $submenu[ $parent_slug ], $position, null, true );
+			// Add the new item
+			$before_items[] = $new_sub_menu;
+			// Merge the items.
+			$submenu[ $parent_slug ] = array_merge( $before_items, $after_items );
+		}
 	}
 	// Sort the parent array
 	ksort( $submenu[ $parent_slug ] );
