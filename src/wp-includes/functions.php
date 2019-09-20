@@ -799,27 +799,40 @@ function wp_extract_urls( $content ) {
  * pingbacks and trackbacks.
  *
  * @since 1.5.0
+ * @since 5.3.0 The `$content` parameter was made optional, and the `$post` parameter was
+ *              updated to accept a post ID or a WP_Post object.
  *
  * @global wpdb $wpdb WordPress database abstraction object.
  *
- * @param string $content Post Content.
- * @param int    $post_ID Post ID.
+ * @param string         $content Post content. If `null`, the `post_content` field from `$post` is used.
+ * @param int|WP_Post    $post    Post ID or post object.
+ * @return null|bool Returns false if post is not found.
  */
-function do_enclose( $content, $post_ID ) {
+function do_enclose( $content = null, $post ) {
 	global $wpdb;
 
-	//TODO: Tidy this ghetto code up and make the debug code optional
+	// @todo Tidy this code and make the debug code optional.
 	include_once( ABSPATH . WPINC . '/class-IXR.php' );
+
+	$post = get_post( $post );
+	if ( ! $post ) {
+		return false;
+	}
+
+	if ( null === $content ) {
+		$content = $post->post_content;
+	}
 
 	$post_links = array();
 
-	$pung = get_enclosed( $post_ID );
+	$pung = get_enclosed( $post->ID );
 
 	$post_links_temp = wp_extract_urls( $content );
 
 	foreach ( $pung as $link_test ) {
-		if ( ! in_array( $link_test, $post_links_temp ) ) { // link no longer in post
-			$mids = $wpdb->get_col( $wpdb->prepare( "SELECT meta_id FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'enclosure' AND meta_value LIKE %s", $post_ID, $wpdb->esc_like( $link_test ) . '%' ) );
+		// Link is no longer in post.
+		if ( ! in_array( $link_test, $post_links_temp, true ) ) {
+			$mids = $wpdb->get_col( $wpdb->prepare( "SELECT meta_id FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'enclosure' AND meta_value LIKE %s", $post->ID, $wpdb->esc_like( $link_test ) . '%' ) );
 			foreach ( $mids as $mid ) {
 				delete_metadata_by_mid( 'post', $mid );
 			}
@@ -827,14 +840,15 @@ function do_enclose( $content, $post_ID ) {
 	}
 
 	foreach ( (array) $post_links_temp as $link_test ) {
-		if ( ! in_array( $link_test, $pung ) ) { // If we haven't pung it already
+		// If we haven't pung it already.
+		if ( ! in_array( $link_test, $pung, true ) ) {
 			$test = @parse_url( $link_test );
 			if ( false === $test ) {
 				continue;
 			}
 			if ( isset( $test['query'] ) ) {
 				$post_links[] = $link_test;
-			} elseif ( isset( $test['path'] ) && ( $test['path'] != '/' ) && ( $test['path'] != '' ) ) {
+			} elseif ( isset( $test['path'] ) && ( '/' !== $test['path'] ) && ( '' !== $test['path'] ) ) {
 				$post_links[] = $link_test;
 			}
 		}
@@ -851,10 +865,10 @@ function do_enclose( $content, $post_ID ) {
 	 * @param array $post_links An array of enclosure links.
 	 * @param int   $post_ID    Post ID.
 	 */
-	$post_links = apply_filters( 'enclosure_links', $post_links, $post_ID );
+	$post_links = apply_filters( 'enclosure_links', $post_links, $post->ID );
 
 	foreach ( (array) $post_links as $url ) {
-		if ( $url != '' && ! $wpdb->get_var( $wpdb->prepare( "SELECT post_id FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'enclosure' AND meta_value LIKE %s", $post_ID, $wpdb->esc_like( $url ) . '%' ) ) ) {
+		if ( '' !== $url && ! $wpdb->get_var( $wpdb->prepare( "SELECT post_id FROM $wpdb->postmeta WHERE post_id = %d AND meta_key = 'enclosure' AND meta_value LIKE %s", $post->ID, $wpdb->esc_like( $url ) . '%' ) ) ) {
 
 			$headers = wp_get_http_headers( $url );
 			if ( $headers ) {
@@ -877,8 +891,8 @@ function do_enclose( $content, $post_ID ) {
 					}
 				}
 
-				if ( in_array( substr( $type, 0, strpos( $type, '/' ) ), $allowed_types ) ) {
-					add_post_meta( $post_ID, 'enclosure', "$url\n$len\n$mime\n" );
+				if ( in_array( substr( $type, 0, strpos( $type, '/' ) ), $allowed_types, true ) ) {
+					add_post_meta( $post->ID, 'enclosure', "$url\n$len\n$mime\n" );
 				}
 			}
 		}
@@ -1040,8 +1054,7 @@ function _http_build_query( $data, $prefix = null, $sep = null, $key = '', $urle
  * @param string       $url   Optional. A URL to act upon.
  * @return string New URL query string (unescaped).
  */
-function add_query_arg() {
-	$args = func_get_args();
+function add_query_arg( ...$args ) {
 	if ( is_array( $args[0] ) ) {
 		if ( count( $args ) < 2 || false === $args[1] ) {
 			$uri = $_SERVER['REQUEST_URI'];
@@ -1250,7 +1263,7 @@ function wp( $query_vars = '' ) {
  * @global array $wp_header_to_desc
  *
  * @param int $code HTTP status code.
- * @return string Empty string if not found, or description if found.
+ * @return string Status description if found, an empty string otherwise.
  */
 function get_status_header_desc( $code ) {
 	global $wp_header_to_desc;
@@ -2159,7 +2172,7 @@ function wp_get_upload_dir() {
 }
 
 /**
- * Get an array containing the current upload directory's path and url.
+ * Returns an array containing the current upload directory's path and URL.
  *
  * Checks the 'upload_path' option, which should be from the web root folder,
  * and if it isn't empty it will be used. If it is empty, then the path will be
@@ -2177,14 +2190,6 @@ function wp_get_upload_dir() {
  * 'error' containing the error message. The error suggests that the parent
  * directory is not writable by the server.
  *
- * On success, the returned array will have many indices:
- * 'path' - base directory and sub directory or full path to upload directory.
- * 'url' - base url and sub directory or absolute URL to upload directory.
- * 'subdir' - sub directory if uploads use year/month folders option is on.
- * 'basedir' - path without subdir.
- * 'baseurl' - URL path without subdir.
- * 'error' - false or error message.
- *
  * @since 2.0.0
  * @uses _wp_upload_dir()
  *
@@ -2195,7 +2200,16 @@ function wp_get_upload_dir() {
  * @param bool   $create_dir Optional. Whether to check and create the uploads directory.
  *                           Default true for backward compatibility.
  * @param bool   $refresh_cache Optional. Whether to refresh the cache. Default false.
- * @return array See above for description.
+ * @return array {
+ *     Array of information about the upload directory.
+ *
+ *     @type string       $path    Base directory and subdirectory or full path to upload directory.
+ *     @type string       $url     Base URL and subdirectory or absolute URL to upload directory.
+ *     @type string       $subdir  Subdirectory if uploads use year/month folders option is on.
+ *     @type string       $basedir Path without subdir.
+ *     @type string       $baseurl URL path without subdir.
+ *     @type string|false $error   False or error message.
+ * }
  */
 function wp_upload_dir( $time = null, $create_dir = true, $refresh_cache = false ) {
 	static $cache = array(), $tested_paths = array();
@@ -2211,8 +2225,16 @@ function wp_upload_dir( $time = null, $create_dir = true, $refresh_cache = false
 	 *
 	 * @since 2.0.0
 	 *
-	 * @param array $uploads Array of upload directory data with keys of 'path',
-	 *                       'url', 'subdir, 'basedir', and 'error'.
+	 * @param array $uploads {
+	 *     Array of information about the upload directory.
+	 *
+	 *     @type string       $path    Base directory and subdirectory or full path to upload directory.
+	 *     @type string       $url     Base URL and subdirectory or absolute URL to upload directory.
+	 *     @type string       $subdir  Subdirectory if uploads use year/month folders option is on.
+	 *     @type string       $basedir Path without subdir.
+	 *     @type string       $baseurl URL path without subdir.
+	 *     @type string|false $error   False or error message.
+	 * }
 	 */
 	$uploads = apply_filters( 'upload_dir', $cache[ $key ] );
 
@@ -3076,6 +3098,7 @@ function wp_nonce_ays( $action ) {
  * @since 4.1.0 The `$title` and `$args` parameters were changed to optionally accept
  *              an integer to be used as the response code.
  * @since 5.1.0 The `$link_url`, `$link_text`, and `$exit` arguments were added.
+ * @since 5.3.0 The `$charset` argument was added.
  *
  * @global WP_Query $wp_query WordPress Query object.
  *
@@ -3099,6 +3122,7 @@ function wp_nonce_ays( $action ) {
  *     @type string $text_direction The text direction. This is only useful internally, when WordPress
  *                                  is still loading and the site's locale is not set up yet. Accepts 'rtl'.
  *                                  Default is the value of is_rtl().
+ *     @type string $charset        Character set of the HTML output. Default 'utf-8'.
  *     @type string $code           Error code to use. Default is 'wp_die', or the main error code if $message
  *                                  is a WP_Error.
  *     @type bool   $exit           Whether to exit the process after completion. Default true.
@@ -3226,7 +3250,7 @@ function _default_wp_die_handler( $message, $title = '', $args = array() ) {
 
 	if ( ! did_action( 'admin_head' ) ) :
 		if ( ! headers_sent() ) {
-			header( 'Content-Type: text/html; charset=utf-8' );
+			header( "Content-Type: text/html; charset={$parsed_args['charset']}" );
 			status_header( $parsed_args['response'] );
 			nocache_headers();
 		}
@@ -3241,7 +3265,7 @@ function _default_wp_die_handler( $message, $title = '', $args = array() ) {
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" <?php echo $dir_attr; ?>>
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta http-equiv="Content-Type" content="text/html; charset=<?php echo $parsed_args['charset']; ?>" />
 	<meta name="viewport" content="width=device-width">
 		<?php
 		if ( function_exists( 'wp_no_robots' ) ) {
@@ -3445,7 +3469,7 @@ function _json_wp_die_handler( $message, $title = '', $args = array() ) {
 	);
 
 	if ( ! headers_sent() ) {
-		header( 'Content-Type: application/json; charset=utf-8' );
+		header( "Content-Type: application/json; charset={$parsed_args['charset']}" );
 		if ( null !== $parsed_args['response'] ) {
 			status_header( $parsed_args['response'] );
 		}
@@ -3483,7 +3507,7 @@ function _jsonp_wp_die_handler( $message, $title = '', $args = array() ) {
 	);
 
 	if ( ! headers_sent() ) {
-		header( 'Content-Type: application/javascript; charset=utf-8' );
+		header( "Content-Type: application/javascript; charset={$parsed_args['charset']}" );
 		header( 'X-Content-Type-Options: nosniff' );
 		header( 'X-Robots-Tag: noindex' );
 		if ( null !== $parsed_args['response'] ) {
@@ -3563,7 +3587,7 @@ function _xml_wp_die_handler( $message, $title = '', $args = array() ) {
 EOD;
 
 	if ( ! headers_sent() ) {
-		header( 'Content-Type: text/xml; charset=utf-8' );
+		header( "Content-Type: text/xml; charset={$parsed_args['charset']}" );
 		if ( null !== $parsed_args['response'] ) {
 			status_header( $parsed_args['response'] );
 		}
@@ -3610,10 +3634,16 @@ function _scalar_wp_die_handler( $message = '', $title = '', $args = array() ) {
  * @since 5.1.0
  * @access private
  *
- * @param string       $message Error message.
- * @param string       $title   Optional. Error title. Default empty.
- * @param string|array $args    Optional. Arguments to control behavior. Default empty array.
- * @return array List of processed $message string, $title string, and $args array.
+ * @param string|WP_Error $message Error message or WP_Error object.
+ * @param string          $title   Optional. Error title. Default empty.
+ * @param string|array    $args    Optional. Arguments to control behavior. Default empty array.
+ * @return array {
+ *     Processed arguments.
+ *
+ *     @type string $0 Error message.
+ *     @type string $1 Error title.
+ *     @type array  $2 Arguments to control behavior.
+ * }
  */
 function _wp_die_process_input( $message, $title = '', $args = array() ) {
 	$defaults = array(
@@ -3624,6 +3654,7 @@ function _wp_die_process_input( $message, $title = '', $args = array() ) {
 		'link_url'          => '',
 		'link_text'         => '',
 		'text_direction'    => '',
+		'charset'           => 'utf-8',
 		'additional_errors' => array(),
 	);
 
@@ -3677,6 +3708,10 @@ function _wp_die_process_input( $message, $title = '', $args = array() ) {
 		if ( function_exists( 'is_rtl' ) && is_rtl() ) {
 			$args['text_direction'] = 'rtl';
 		}
+	}
+
+	if ( ! empty( $args['charset'] ) ) {
+		$args['charset'] = _canonical_charset( $args['charset'] );
 	}
 
 	return array( $message, $title, $args );
@@ -5962,6 +5997,7 @@ function send_frame_options_header() {
  * @since 3.3.0
  * @since 4.3.0 Added 'webcal' to the protocols array.
  * @since 4.7.0 Added 'urn' to the protocols array.
+ * @since 5.3.0 Added 'sms' to the protocols array.
  *
  * @see wp_kses()
  * @see esc_url()
@@ -5970,15 +6006,15 @@ function send_frame_options_header() {
  *
  * @return string[] Array of allowed protocols. Defaults to an array containing 'http', 'https',
  *                  'ftp', 'ftps', 'mailto', 'news', 'irc', 'gopher', 'nntp', 'feed', 'telnet',
- *                  'mms', 'rtsp', 'svn', 'tel', 'fax', 'xmpp', 'webcal', and 'urn'. This covers
- *                  all common link protocols, except for 'javascript' which should not be
- *                  allowed for untrusted users.
+ *                  'mms', 'rtsp', 'sms', 'svn', 'tel', 'fax', 'xmpp', 'webcal', and 'urn'.
+ *                  This covers all common link protocols, except for 'javascript' which should not
+ *                  be allowed for untrusted users.
  */
 function wp_allowed_protocols() {
 	static $protocols = array();
 
 	if ( empty( $protocols ) ) {
-		$protocols = array( 'http', 'https', 'ftp', 'ftps', 'mailto', 'news', 'irc', 'gopher', 'nntp', 'feed', 'telnet', 'mms', 'rtsp', 'svn', 'tel', 'fax', 'xmpp', 'webcal', 'urn' );
+		$protocols = array( 'http', 'https', 'ftp', 'ftps', 'mailto', 'news', 'irc', 'gopher', 'nntp', 'feed', 'telnet', 'mms', 'rtsp', 'sms', 'svn', 'tel', 'fax', 'xmpp', 'webcal', 'urn' );
 	}
 
 	if ( ! did_action( 'wp_loaded' ) ) {

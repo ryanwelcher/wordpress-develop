@@ -2713,10 +2713,6 @@ function untrailingslashit( $string ) {
  * @return string Returns a string escaped with slashes.
  */
 function addslashes_gpc( $gpc ) {
-	if ( get_magic_quotes_gpc() ) {
-		$gpc = stripslashes( $gpc );
-	}
-
 	return wp_slash( $gpc );
 }
 
@@ -4782,8 +4778,6 @@ function map_deep( $value, $callback ) {
 /**
  * Parses a string into variables to be stored in an array.
  *
- * Uses {@link https://secure.php.net/parse_str parse_str()} and stripslashes if
- * {@link https://secure.php.net/magic_quotes magic_quotes_gpc} is on.
  *
  * @since 2.2.1
  *
@@ -4792,9 +4786,7 @@ function map_deep( $value, $callback ) {
  */
 function wp_parse_str( $string, &$array ) {
 	parse_str( $string, $array );
-	if ( get_magic_quotes_gpc() ) {
-		$array = stripslashes_deep( $array );
-	}
+
 	/**
 	 * Filters the array of variables derived from a parsed string.
 	 *
@@ -4844,8 +4836,7 @@ function wp_pre_kses_less_than_callback( $matches ) {
  * @param mixed  ...$args Arguments to be formatted into the $pattern string.
  * @return string The formatted string.
  */
-function wp_sprintf( $pattern ) {
-	$args      = func_get_args();
+function wp_sprintf( $pattern, ...$args ) {
 	$len       = strlen( $pattern );
 	$start     = 0;
 	$result    = '';
@@ -4875,11 +4866,12 @@ function wp_sprintf( $pattern ) {
 		if ( $pattern[ $start ] == '%' ) {
 			// Find numbered arguments or take the next one in order
 			if ( preg_match( '/^%(\d+)\$/', $fragment, $matches ) ) {
-				$arg      = isset( $args[ $matches[1] ] ) ? $args[ $matches[1] ] : '';
+				$index    = $matches[1] - 1; // 0-based array vs 1-based sprintf arguments.
+				$arg      = isset( $args[ $index ] ) ? $args[ $index ] : '';
 				$fragment = str_replace( "%{$matches[1]}$", '%', $fragment );
 			} else {
-				++$arg_index;
 				$arg = isset( $args[ $arg_index ] ) ? $args[ $arg_index ] : '';
+				++$arg_index;
 			}
 
 			/**
@@ -5443,8 +5435,10 @@ function print_emoji_styles() {
 	}
 
 	$printed = true;
+
+	$type_attr = current_theme_supports( 'html5', 'style' ) ? '' : ' type="text/css"';
 	?>
-<style type="text/css">
+<style<?php echo $type_attr; ?>>
 img.wp-smiley,
 img.emoji {
 	display: inline !important;
@@ -5525,7 +5519,8 @@ function _print_emoji_detection_script() {
 		'svgExt'  => apply_filters( 'emoji_svg_ext', '.svg' ),
 	);
 
-	$version = 'ver=' . get_bloginfo( 'version' );
+	$version   = 'ver=' . get_bloginfo( 'version' );
+	$type_attr = current_theme_supports( 'html5', 'style' ) ? '' : ' type="text/javascript"';
 
 	if ( SCRIPT_DEBUG ) {
 		$settings['source'] = array(
@@ -5536,7 +5531,7 @@ function _print_emoji_detection_script() {
 		);
 
 		?>
-		<script type="text/javascript">
+		<script<?php echo $type_attr; ?>>
 			window._wpemojiSettings = <?php echo wp_json_encode( $settings ); ?>;
 			<?php readfile( ABSPATH . WPINC . '/js/wp-emoji-loader.js' ); ?>
 		</script>
@@ -5558,7 +5553,7 @@ function _print_emoji_detection_script() {
 		 * and edit wp-emoji-loader.js directly.
 		 */
 		?>
-		<script type="text/javascript">
+		<script<?php echo $type_attr; ?>>
 			window._wpemojiSettings = <?php echo wp_json_encode( $settings ); ?>;
 			include "js/wp-emoji-loader.min.js"
 		</script>

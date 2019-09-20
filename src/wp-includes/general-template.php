@@ -1735,18 +1735,19 @@ function get_the_post_type_description() {
  * @return string HTML link content for archive.
  */
 function get_archives_link( $url, $text, $format = 'html', $before = '', $after = '', $selected = false ) {
-	$text = wptexturize( $text );
-	$url  = esc_url( $url );
+	$text         = wptexturize( $text );
+	$url          = esc_url( $url );
+	$aria_current = $selected ? ' aria-current="page"' : '';
 
-	if ( 'link' == $format ) {
+	if ( 'link' === $format ) {
 		$link_html = "\t<link rel='archives' title='" . esc_attr( $text ) . "' href='$url' />\n";
-	} elseif ( 'option' == $format ) {
+	} elseif ( 'option' === $format ) {
 		$selected_attr = $selected ? " selected='selected'" : '';
 		$link_html     = "\t<option value='$url'$selected_attr>$before $text $after</option>\n";
-	} elseif ( 'html' == $format ) {
-		$link_html = "\t<li>$before<a href='$url'>$text</a>$after</li>\n";
+	} elseif ( 'html' === $format ) {
+		$link_html = "\t<li>$before<a href='$url'$aria_current>$text</a>$after</li>\n";
 	} else { // custom
-		$link_html = "\t$before<a href='$url'>$text</a>$after\n";
+		$link_html = "\t$before<a href='$url'$aria_current>$text</a>$after\n";
 	}
 
 	/**
@@ -2515,7 +2516,7 @@ function the_time( $d = '' ) {
  * @param string      $d    Optional. Format to use for retrieving the time the post
  *                          was written. Either 'G', 'U', or php date format defaults
  *                          to the value specified in the time_format option. Default empty.
- * @param int|WP_Post $post WP_Post object or ID. Default is global $post object.
+ * @param int|WP_Post $post WP_Post object or ID. Default is global `$post` object.
  * @return string|int|false Formatted date string or Unix timestamp if `$d` is 'U' or 'G'. False on failure.
  */
 function get_the_time( $d = '', $post = null ) {
@@ -2553,7 +2554,7 @@ function get_the_time( $d = '', $post = null ) {
  * @param string      $d         Optional. Format to use for retrieving the time the post
  *                               was written. Either 'G', 'U', or php date format. Default 'U'.
  * @param bool        $gmt       Optional. Whether to retrieve the GMT time. Default false.
- * @param int|WP_Post $post      WP_Post object or ID. Default is global $post object.
+ * @param int|WP_Post $post      WP_Post object or ID. Default is global `$post` object.
  * @param bool        $translate Whether to translate the time string. Default false.
  * @return string|int|false Formatted date string or Unix timestamp if `$d` is 'U' or 'G'. False on failure.
  */
@@ -2564,13 +2565,28 @@ function get_post_time( $d = 'U', $gmt = false, $post = null, $translate = false
 		return false;
 	}
 
-	if ( $gmt ) {
-		$time = $post->post_date_gmt;
-	} else {
-		$time = $post->post_date;
+	$datetime = get_post_datetime( $post );
+
+	if ( false === $datetime ) {
+		return false;
 	}
 
-	$time = mysql2date( $d, $time, $translate );
+	if ( 'U' === $d || 'G' === $d ) {
+		$time = $datetime->getTimestamp();
+
+		// Returns a sum of timestamp with timezone offset. Ideally should never be used.
+		if ( ! $gmt ) {
+			$time += $datetime->getOffset();
+		}
+	} elseif ( $translate ) {
+		$time = wp_date( $d, $datetime->getTimestamp(), $gmt ? new DateTimeZone( 'UTC' ) : null );
+	} else {
+		if ( $gmt ) {
+			$datetime = $datetime->setTimezone( new DateTimeZone( 'UTC' ) );
+		}
+
+		$time = $datetime->format( $d );
+	}
 
 	/**
 	 * Filters the localized time a post was written.
@@ -2583,6 +2599,55 @@ function get_post_time( $d = 'U', $gmt = false, $post = null, $translate = false
 	 * @param bool   $gmt  Whether to retrieve the GMT time. Default false.
 	 */
 	return apply_filters( 'get_post_time', $time, $d, $gmt );
+}
+
+/**
+ * Retrieve post published or modified time as a `DateTimeImmutable` object instance.
+ *
+ * The object will be set to the timezone from WordPress settings.
+ *
+ * @since 5.3.0
+ *
+ * @param int|WP_Post $post  Optional. WP_Post object or ID. Default is global `$post` object.
+ * @param string      $field Optional. Post field to use. Accepts 'date' or 'modified'.
+ * @return DateTimeImmutable|false Time object on success, false on failure.
+ */
+function get_post_datetime( $post = null, $field = 'date' ) {
+	$post = get_post( $post );
+
+	if ( ! $post ) {
+		return false;
+	}
+
+	$time = ( 'modified' === $field ) ? $post->post_modified : $post->post_date;
+
+	if ( empty( $time ) || '0000-00-00 00:00:00' === $time ) {
+		return false;
+	}
+
+	return date_create_immutable_from_format( 'Y-m-d H:i:s', $time, wp_timezone() );
+}
+
+/**
+ * Retrieve post published or modified time as a Unix timestamp.
+ *
+ * Note that this function returns a true Unix timestamp, not summed with timezone offset
+ * like older WP functions.
+ *
+ * @since 5.3.0
+ *
+ * @param int|WP_Post $post  Optional. WP_Post object or ID. Default is global `$post` object.
+ * @param string      $field Optional. Post field to use. Accepts 'date' or 'modified'.
+ * @return int|false Unix timestamp on success, false on failure.
+ */
+function get_post_timestamp( $post = null, $field = 'date' ) {
+	$datetime = get_post_datetime( $post, $field );
+
+	if ( false === $datetime ) {
+		return false;
+	}
+
+	return $datetime->getTimestamp();
 }
 
 /**
@@ -2653,7 +2718,7 @@ function get_the_modified_time( $d = '', $post = null ) {
  * @param string      $d         Optional. Format to use for retrieving the time the post
  *                               was modified. Either 'G', 'U', or php date format. Default 'U'.
  * @param bool        $gmt       Optional. Whether to retrieve the GMT time. Default false.
- * @param int|WP_Post $post      WP_Post object or ID. Default is global $post object.
+ * @param int|WP_Post $post      WP_Post object or ID. Default is global `$post` object.
  * @param bool        $translate Whether to translate the time string. Default false.
  * @return string|int|false Formatted date string or Unix timestamp if `$d` is 'U' or 'G'. False on failure.
  */
@@ -2664,13 +2729,28 @@ function get_post_modified_time( $d = 'U', $gmt = false, $post = null, $translat
 		return false;
 	}
 
-	if ( $gmt ) {
-		$time = $post->post_modified_gmt;
-	} else {
-		$time = $post->post_modified;
+	$datetime = get_post_datetime( $post, 'modified' );
+
+	if ( false === $datetime ) {
+		return false;
 	}
 
-	$time = mysql2date( $d, $time, $translate );
+	if ( 'U' === $d || 'G' === $d ) {
+		$time = $datetime->getTimestamp();
+
+		// Returns a sum of timestamp with timezone offset. Ideally should never be used.
+		if ( ! $gmt ) {
+			$time += $datetime->getOffset();
+		}
+	} elseif ( $translate ) {
+		$time = wp_date( $d, $datetime->getTimestamp(), $gmt ? new DateTimeZone( 'UTC' ) : null );
+	} else {
+		if ( $gmt ) {
+			$datetime = $datetime->setTimezone( new DateTimeZone( 'UTC' ) );
+		}
+
+		$time = $datetime->format( $d );
+	}
 
 	/**
 	 * Filters the localized time a post was last modified.
@@ -4077,7 +4157,8 @@ function paginate_links( $args = '' ) {
 				esc_attr( $args['aria_current'] ),
 				$args['before_page_number'] . number_format_i18n( $n ) . $args['after_page_number']
 			);
-			$dots         = true;
+
+			$dots = true;
 		else :
 			if ( $args['show_all'] || ( $n <= $end_size || ( $current && $n >= $current - $mid_size && $n <= $current + $mid_size ) || $n > $total - $end_size ) ) :
 				$link = str_replace( '%_%', 1 == $n ? '' : $args['format'], $args['base'] );
@@ -4093,10 +4174,12 @@ function paginate_links( $args = '' ) {
 					esc_url( apply_filters( 'paginate_links', $link ) ),
 					$args['before_page_number'] . number_format_i18n( $n ) . $args['after_page_number']
 				);
-				$dots         = true;
+
+				$dots = true;
 			elseif ( $dots && ! $args['show_all'] ) :
 				$page_links[] = '<span class="page-numbers dots">' . __( '&hellip;' ) . '</span>';
-				$dots         = false;
+
+				$dots = false;
 			endif;
 		endif;
 	endfor;

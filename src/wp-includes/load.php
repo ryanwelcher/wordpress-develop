@@ -131,13 +131,10 @@ function wp_check_php_mysql_versions() {
 	$php_version = phpversion();
 
 	if ( version_compare( $required_php_version, $php_version, '>' ) ) {
-		wp_load_translations_early();
-
 		$protocol = wp_get_server_protocol();
 		header( sprintf( '%s 500 Internal Server Error', $protocol ), true, 500 );
 		header( 'Content-Type: text/html; charset=utf-8' );
-		/* translators: 1: Current PHP version number, 2: WordPress version number, 3: Minimum required PHP version number. */
-		printf( __( 'Your server is running PHP version %1$s but WordPress %2$s requires at least %3$s.' ), $php_version, $wp_version, $required_php_version );
+		printf( 'Your server is running PHP version %1$s but WordPress %2$s requires at least %3$s.', $php_version, $wp_version, $required_php_version );
 		exit( 1 );
 	}
 
@@ -925,13 +922,6 @@ function wp_set_internal_encoding() {
  * @access private
  */
 function wp_magic_quotes() {
-	// If already slashed, strip.
-	if ( get_magic_quotes_gpc() ) {
-		$_GET    = stripslashes_deep( $_GET );
-		$_POST   = stripslashes_deep( $_POST );
-		$_COOKIE = stripslashes_deep( $_COOKIE );
-	}
-
 	// Escape with wpdb.
 	$_GET    = add_magic_quotes( $_GET );
 	$_POST   = add_magic_quotes( $_POST );

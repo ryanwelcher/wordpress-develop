@@ -630,7 +630,7 @@ if ( ! function_exists( 'wp_upgrade' ) ) :
 
 		$wp_current_db_version = __get_option( 'db_version' );
 
-		// We are up-to-date. Nothing to do.
+		// We are up to date. Nothing to do.
 		if ( $wp_db_version == $wp_current_db_version ) {
 			return;
 		}
@@ -650,13 +650,8 @@ if ( ! function_exists( 'wp_upgrade' ) ) :
 		wp_cache_flush();
 
 		if ( is_multisite() ) {
-			$site_id = get_current_blog_id();
-
-			if ( $wpdb->get_row( $wpdb->prepare( "SELECT blog_id FROM {$wpdb->blog_versions} WHERE blog_id = %d", $site_id ) ) ) {
-				$wpdb->query( $wpdb->prepare( "UPDATE {$wpdb->blog_versions} SET db_version = %d WHERE blog_id = %d", $wp_db_version, $site_id ) );
-			} else {
-				$wpdb->query( $wpdb->prepare( "INSERT INTO {$wpdb->blog_versions} ( `blog_id` , `db_version` , `last_updated` ) VALUES ( %d, %d, NOW() );", $site_id, $wp_db_version ) );
-			}
+			update_site_meta( get_current_blog_id(), 'db_version', $wp_db_version );
+			update_site_meta( get_current_blog_id(), 'db_last_updated', microtime() );
 		}
 
 		/**
@@ -687,7 +682,7 @@ function upgrade_all() {
 	global $wp_current_db_version, $wp_db_version;
 	$wp_current_db_version = __get_option( 'db_version' );
 
-	// We are up-to-date. Nothing to do.
+	// We are up to date. Nothing to do.
 	if ( $wp_db_version == $wp_current_db_version ) {
 		return;
 	}
@@ -1056,7 +1051,7 @@ function upgrade_130() {
 			$limit    = $option->dupes - 1;
 			$dupe_ids = $wpdb->get_col( $wpdb->prepare( "SELECT option_id FROM $wpdb->options WHERE option_name = %s LIMIT %d", $option->option_name, $limit ) );
 			if ( $dupe_ids ) {
-				$dupe_ids = join( $dupe_ids, ',' );
+				$dupe_ids = join( ',', $dupe_ids );
 				$wpdb->query( "DELETE FROM $wpdb->options WHERE option_id IN ($dupe_ids)" );
 			}
 		}
