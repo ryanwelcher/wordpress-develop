@@ -17,6 +17,8 @@
 	"scripts": {
 		"format": "phpcbf --standard=phpcs.xml.dist --report-summary --report-source",
 		"lint": "phpcs --standard=phpcs.xml.dist --report-summary --report-source",
-		"unit-tests": "./vendor/bin/phpunit"
+		"unit-tests": "./vendor/bin/phpunit",
+		"wp-coding-standards/wpcs": "~2.1.0",
+		"lint:errors": "@lint -n"
 	}
 }

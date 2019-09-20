@@ -54,7 +54,8 @@ class Tests_Kses extends WP_UnitTestCase {
 				$attr          = "$name='$value'";
 				$expected_attr = "$name='" . trim( $value, ';' ) . "'";
 			} else {
-				$attr = $expected_attr = $name;
+				$attr          = $name;
+				$expected_attr = $name;
 			}
 			$string        = "<a $attr>I link this</a>";
 			$expect_string = "<a $expected_attr>I link this</a>";
@@ -144,10 +145,12 @@ EOF;
 			'javascript&#0000058alert(1)//?:',
 			'feed:javascript:alert(1)',
 			'feed:javascript:feed:javascript:feed:javascript:alert(1)',
+			'javascript&#58alert(1)',
+			'javascript&#x3ax=1;alert(1)',
 		);
 		foreach ( $bad as $k => $x ) {
 			$result = wp_kses_bad_protocol( wp_kses_normalize_entities( $x ), wp_allowed_protocols() );
-			if ( ! empty( $result ) && $result != 'alert(1);' && $result != 'alert(1)' ) {
+			if ( ! empty( $result ) && 'alert(1);' !== $result && 'alert(1)' !== $result ) {
 				switch ( $k ) {
 					case 6:
 						$this->assertEquals( 'javascript&amp;#0000058alert(1);', $result );
@@ -164,8 +167,14 @@ EOF;
 					case 24:
 						$this->assertEquals( 'feed:alert(1)', $result );
 						break;
+					case 26:
+						$this->assertEquals( 'javascript&amp;#58alert(1)', $result );
+						break;
+					case 27:
+						$this->assertEquals( 'javascript&amp;#x3ax=1;alert(1)', $result );
+						break;
 					default:
-						$this->fail( "wp_kses_bad_protocol failed on $x. Result: $result" );
+						$this->fail( "wp_kses_bad_protocol failed on $k, $x. Result: $result" );
 				}
 			}
 		}
@@ -182,7 +191,7 @@ EOF;
 		);
 		foreach ( $safe as $x ) {
 			$result = wp_kses_bad_protocol( wp_kses_normalize_entities( $x ), array( 'http', 'https', 'dummy' ) );
-			if ( $result != $x && $result != 'http://example.org/' ) {
+			if ( $result !== $x && 'http://example.org/' !== $result ) {
 				$this->fail( "wp_kses_bad_protocol incorrectly blocked $x" );
 			}
 		}
@@ -191,17 +200,17 @@ EOF;
 	public function test_hackers_attacks() {
 		$xss = simplexml_load_file( DIR_TESTDATA . '/formatting/xssAttacks.xml' );
 		foreach ( $xss->attack as $attack ) {
-			if ( in_array( $attack->name, array( 'IMG Embedded commands 2', 'US-ASCII encoding', 'OBJECT w/Flash 2', 'Character Encoding Example' ) ) ) {
+			if ( in_array( (string) $attack->name, array( 'IMG Embedded commands 2', 'US-ASCII encoding', 'OBJECT w/Flash 2', 'Character Encoding Example' ), true ) ) {
 				continue;
 			}
 
 			$code = (string) $attack->code;
 
-			if ( $code == 'See Below' ) {
+			if ( 'See Below' === $code ) {
 				continue;
 			}
 
-			if ( substr( $code, 0, 4 ) == 'perl' ) {
+			if ( substr( $code, 0, 4 ) === 'perl' ) {
 				$pos  = strpos( $code, '"' ) + 1;
 				$code = substr( $code, $pos, strrpos( $code, '"' ) - $pos );
 				$code = str_replace( '\0', "\0", $code );
@@ -209,7 +218,7 @@ EOF;
 
 			$result = trim( wp_kses_data( $code ) );
 
-			if ( $result == '' || $result == 'XSS' || $result == 'alert("XSS");' || $result == "alert('XSS');" ) {
+			if ( in_array( $result, array( '', 'XSS', 'alert("XSS");', "alert('XSS');" ), true ) ) {
 				continue;
 			}
 
@@ -323,7 +332,7 @@ EOF;
 	}
 
 	function _wp_kses_allowed_html_filter( $html, $context ) {
-		if ( 'post' == $context ) {
+		if ( 'post' === $context ) {
 			return array( 'a' => array( 'href' => true ) );
 		} else {
 			return array( 'a' => array( 'href' => false ) );
@@ -829,6 +838,11 @@ EOF;
 			array(
 				'css'      => 'background: green url("foo.jpg") no-repeat fixed center',
 				'expected' => 'background: green url("foo.jpg") no-repeat fixed center',
+			),
+			// `flex` and related attributes introduced in 5.3.
+			array(
+				'css'      => 'flex: 0 1 auto;flex-basis: 75%;flex-shrink: 0;flex-grow: 1',
+				'expected' => 'flex: 0 1 auto;flex-basis: 75%;flex-shrink: 0;flex-grow: 1',
 			),
 		);
 	}

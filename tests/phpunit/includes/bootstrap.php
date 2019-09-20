@@ -47,7 +47,7 @@ if ( version_compare( tests_get_phpunit_version(), '8.0', '>=' ) ) {
 }
 
 if ( defined( 'WP_RUN_CORE_TESTS' ) && WP_RUN_CORE_TESTS && ! is_dir( ABSPATH ) ) {
-	echo "ERROR: The /build/ directory is missing! Please run `grunt build` prior to running PHPUnit.\n";
+	echo "ERROR: The /build/ directory is missing! Please run `npm run build` prior to running PHPUnit.\n";
 	exit( 1 );
 }
 
@@ -71,10 +71,12 @@ define( 'WP_MAX_MEMORY_LIMIT', -1 );
 
 define( 'REST_TESTS_IMPOSSIBLY_HIGH_NUMBER', 99999999 );
 
-$PHP_SELF = $GLOBALS['PHP_SELF'] = $_SERVER['PHP_SELF'] = '/index.php';
+$PHP_SELF            = '/index.php';
+$GLOBALS['PHP_SELF'] = '/index.php';
+$_SERVER['PHP_SELF'] = '/index.php';
 
 // Should we run in multisite mode?
-$multisite = '1' == getenv( 'WP_MULTISITE' );
+$multisite = ( '1' === getenv( 'WP_MULTISITE' ) );
 $multisite = $multisite || ( defined( 'WP_TESTS_MULTISITE' ) && WP_TESTS_MULTISITE );
 $multisite = $multisite || ( defined( 'MULTISITE' ) && MULTISITE );
 
@@ -189,7 +191,7 @@ class WP_PHPUnit_Util_Getopt {
 					}
 
 					foreach ( $skipped_groups as $group_name => $skipped ) {
-						if ( in_array( $group_name, $groups ) ) {
+						if ( in_array( $group_name, $groups, true ) ) {
 							$skipped_groups[ $group_name ] = false;
 						}
 					}
