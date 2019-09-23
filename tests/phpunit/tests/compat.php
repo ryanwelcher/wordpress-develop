@@ -179,6 +179,9 @@ EOT;
 		$this->assertEquals( array( 1 => '993003b95758e0ac2eba451a4c5877eb1bb7b92a' ), unpack( 'H40', _hash_hmac( 'sha1', 'simple', 'key', true ) ) );
 	}
 
+	/**
+	 * @expectedException PHPUnit_Framework_Error_Notice
+	 */
 	function test_json_encode_decode() {
 		require_once( ABSPATH . WPINC . '/class-json.php' );
 		$json = new Services_JSON();
@@ -244,11 +247,6 @@ EOT;
 	function test_is_countable_ResourceBundle() {
 		if ( ! class_exists( 'ResourceBundle' ) ) {
 			$this->markTestSkipped( 'The intl extension is not loaded. ResourceBundle not tested for is_countable().' );
-		}
-
-		if ( version_compare( PHP_VERSION, '5.4', '<' ) ) {
-			$this->markTestSkipped( 'ResourceBundle is only countable in PHP 5.4+' );
-			return;
 		}
 
 		$this->assertTrue( is_countable( new ResourceBundle( 'en', null ) ) );
