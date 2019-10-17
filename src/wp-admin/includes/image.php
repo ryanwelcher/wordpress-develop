@@ -164,7 +164,7 @@ function wp_update_image_subsizes( $attachment_id ) {
  * @since 5.3.0
  * @access private
  *
- * @param array  $saved_data    The data retirned from WP_Image_Editor after successfully saving an image.
+ * @param array  $saved_data    The data returned from WP_Image_Editor after successfully saving an image.
  * @param string $original_file Path to the original file.
  * @param array  $image_meta    The image meta data.
  * @param int    $attachment_id The attachment post ID.
@@ -235,6 +235,7 @@ function wp_create_image_subsizes( $file, $attachment_id ) {
 	 *
 	 * @since 5.3.0
 	 *
+	 * @param int    $threshold     The threshold value in pixels. Default 2560.
 	 * @param array  $imagesize     Indexed array of the image width and height (in that order).
 	 * @param string $file          Full path to the uploaded image file.
 	 * @param int    $attachment_id Attachment post ID.
@@ -273,11 +274,13 @@ function wp_create_image_subsizes( $file, $attachment_id ) {
 				if ( true === $rotated && ! empty( $image_meta['image_meta']['orientation'] ) ) {
 					$image_meta['image_meta']['orientation'] = 1;
 				}
+
+				wp_update_attachment_metadata( $attachment_id, $image_meta );
 			} else {
-				// TODO: handle errors.
+				// TODO: log errors.
 			}
 		} else {
-			// TODO: handle errors.
+			// TODO: log errors.
 		}
 	} elseif ( ! empty( $exif_meta['orientation'] ) && (int) $exif_meta['orientation'] !== 1 ) {
 		// Rotate the whole original image if there is EXIF data and "orientation" is not 1.
@@ -303,8 +306,10 @@ function wp_create_image_subsizes( $file, $attachment_id ) {
 				if ( ! empty( $image_meta['image_meta']['orientation'] ) ) {
 					$image_meta['image_meta']['orientation'] = 1;
 				}
+
+				wp_update_attachment_metadata( $attachment_id, $image_meta );
 			} else {
-				// TODO: handle errors.
+				// TODO: log errors.
 			}
 		}
 	}
@@ -391,7 +396,7 @@ function _wp_make_subsizes( $new_sizes, $file, $image_meta, $attachment_id ) {
 		$rotated = $editor->maybe_exif_rotate();
 
 		if ( is_wp_error( $rotated ) ) {
-			// TODO: handle errors.
+			// TODO: log errors.
 		}
 	}
 
@@ -400,41 +405,12 @@ function _wp_make_subsizes( $new_sizes, $file, $image_meta, $attachment_id ) {
 			$new_size_meta = $editor->make_subsize( $new_size_data );
 
 			if ( is_wp_error( $new_size_meta ) ) {
-				$error_code = $new_size_meta->get_error_code();
-
-				if ( $error_code === 'error_getting_dimensions' ) {
-					// Ignore errors when `image_resize_dimensions()` returns false.
-					// They mean that the requested size is larger than the original image and should be skipped.
-					continue;
-				}
-
-				if ( empty( $image_meta['subsize_errors'] ) ) {
-					$image_meta['subsize_errors'] = array();
-				}
-
-				$error = array(
-					'error_code'    => $error_code,
-					'error_message' => $new_size_meta->get_error_message(),
-				);
-
-				// Store the error code and error message for displaying in the UI.
-				$image_meta['subsize_errors'][ $new_size_name ] = $error;
+				// TODO: log errors.
 			} else {
-				// The sub-size was created successfully.
-				// Clear out previous errors in creating this subsize.
-				if ( ! empty( $image_meta['subsize_errors'][ $new_size_name ] ) ) {
-					unset( $image_meta['subsize_errors'][ $new_size_name ] );
-				}
-
-				if ( empty( $image_meta['subsize_errors'] ) ) {
-					unset( $image_meta['subsize_errors'] );
-				}
-
 				// Save the size meta value.
 				$image_meta['sizes'][ $new_size_name ] = $new_size_meta;
+				wp_update_attachment_metadata( $attachment_id, $image_meta );
 			}
-
-			wp_update_attachment_metadata( $attachment_id, $image_meta );
 		}
 	} else {
 		// Fall back to `$editor->multi_resize()`.
@@ -442,7 +418,6 @@ function _wp_make_subsizes( $new_sizes, $file, $image_meta, $attachment_id ) {
 
 		if ( ! empty( $created_sizes ) ) {
 			$image_meta['sizes'] = array_merge( $image_meta['sizes'], $created_sizes );
-			unset( $image_meta['subsize_errors'] );
 			wp_update_attachment_metadata( $attachment_id, $image_meta );
 		}
 	}
@@ -576,13 +551,18 @@ function wp_generate_attachment_metadata( $attachment_id, $file ) {
 
 				// Resize based on the full size image, rather than the source.
 				if ( ! is_wp_error( $uploaded ) ) {
-					$editor = wp_get_image_editor( $uploaded['path'] );
+					$image_file = $uploaded['path'];
 					unset( $uploaded['path'] );
 
-					if ( ! is_wp_error( $editor ) ) {
-						$metadata['sizes']         = $editor->multi_resize( $merged_sizes );
-						$metadata['sizes']['full'] = $uploaded;
-					}
+					$metadata['sizes'] = array(
+						'full' => $uploaded,
+					);
+
+					// Save the meta data before any image post-processing errors could happen.
+					wp_update_attachment_metadata( $attachment_id, $metadata );
+
+					// Create sub-sizes saving the image meta after each.
+					$metadata = _wp_make_subsizes( $merged_sizes, $image_file, $metadata, $attachment_id );
 				}
 			}
 		}
@@ -1033,41 +1013,4 @@ function _copy_image_file( $attachment_id ) {
 	}
 
 	return $dst_file;
-}
-
-/**
- * Retrieves the path to an uploaded image.
- *
- * Similar to `get_attached_file()` however some images may have been
- * processed after uploading to make them "web ready".
- * In this case this function returns the path to the originally uploaded image file.
- *
- * @since 5.3.0
- *
- * @param int $attachment_id Attachment ID.
- * @return string|false Path to the original image file or false if the attachment is not an image.
- */
-function wp_get_original_image_path( $attachment_id ) {
-	if ( ! wp_attachment_is_image( $attachment_id ) ) {
-		return false;
-	}
-
-	$image_meta = wp_get_attachment_metadata( $attachment_id );
-	$image_file = get_attached_file( $attachment_id );
-
-	if ( empty( $image_meta['original_image'] ) ) {
-		$original_image = $image_file;
-	} else {
-		$original_image = path_join( dirname( $image_file ), $image_meta['original_image'] );
-	}
-
-	/**
-	 * Filters the path to the original image.
-	 *
-	 * @since 5.3.0
-	 *
-	 * @param string $original_image Path to original image file.
-	 * @param int    $attachment_id  Attachment ID.
-	 */
-	return apply_filters( 'wp_get_original_image_path', $original_image, $attachment_id );
 }

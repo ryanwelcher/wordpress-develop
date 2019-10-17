@@ -958,7 +958,7 @@ function get_edit_tag_link( $tag_id, $taxonomy = 'post_tag' ) {
  *
  * @since 2.7.0
  *
- * @param string  $link   Optional. Anchor text. Default empty.
+ * @param string  $link   Optional. Anchor text. If empty, default is 'Edit This'. Default empty.
  * @param string  $before Optional. Display before edit link. Default empty.
  * @param string  $after  Optional. Display after edit link. Default empty.
  * @param WP_Term $tag    Optional. Term object. If null, the queried object will be inspected.
@@ -981,7 +981,7 @@ function edit_tag_link( $link = '', $before = '', $after = '', $tag = null ) {
  * Retrieves the URL for editing a given term.
  *
  * @since 3.1.0
- * @since 4.5.0 The `$taxonomy` argument was made optional.
+ * @since 4.5.0 The `$taxonomy` parameter was made optional.
  *
  * @param int    $term_id     Term ID.
  * @param string $taxonomy    Optional. Taxonomy. Defaults to the taxonomy of the term identified
@@ -1037,7 +1037,7 @@ function get_edit_term_link( $term_id, $taxonomy = '', $object_type = '' ) {
  *
  * @since 3.1.0
  *
- * @param string $link   Optional. Anchor text. Default empty.
+ * @param string $link   Optional. Anchor text. If empty, default is 'Edit This'. Default empty.
  * @param string $before Optional. Display before edit link. Default empty.
  * @param string $after  Optional. Display after edit link. Default empty.
  * @param object $term   Optional. Term object. If null, the queried object will be inspected. Default null.
@@ -1577,7 +1577,7 @@ function get_edit_bookmark_link( $link = 0 ) {
  *
  * @since 2.7.0
  *
- * @param string $link     Optional. Anchor text. Default empty.
+ * @param string $link     Optional. Anchor text. If empty, default is 'Edit This'. Default empty.
  * @param string $before   Optional. Display before edit link. Default empty.
  * @param string $after    Optional. Display after edit link. Default empty.
  * @param int    $bookmark Optional. Bookmark ID. Default is the current bookmark.
