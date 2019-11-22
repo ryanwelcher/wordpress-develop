@@ -470,6 +470,9 @@ function do_action( $tag, ...$arg ) {
 
 	if ( empty( $arg ) ) {
 		$arg[] = '';
+	} elseif ( is_array( $arg[0] ) && 1 === count( $arg[0] ) && isset( $arg[0][0] ) && is_object( $arg[0][0] ) ) {
+		// Backward compatibility for PHP4-style passing of `array( &$this )` as action `$arg`.
+		$arg[0] = $arg[0][0];
 	}
 
 	$wp_filter[ $tag ]->do_action( $arg );
@@ -608,7 +611,7 @@ function remove_all_actions( $tag, $priority = false ) {
  *     return apply_filters( 'wpdocs_filter', $value, $extra_arg );
  *
  *     // Deprecated.
- *     return apply_filters_deprecated( 'wpdocs_filter', array( $value, $extra_arg ), '4.9', 'wpdocs_new_filter' );
+ *     return apply_filters_deprecated( 'wpdocs_filter', array( $value, $extra_arg ), '4.9.0', 'wpdocs_new_filter' );
  *
  * @since 4.6.0
  *

@@ -270,6 +270,10 @@ class WP_REST_Posts_Controller extends WP_REST_Controller {
 
 		$taxonomies = wp_list_filter( get_object_taxonomies( $this->post_type, 'objects' ), array( 'show_in_rest' => true ) );
 
+		if ( ! empty( $request['tax_relation'] ) ) {
+			$query_args['tax_query'] = array( 'relation' => $request['tax_relation'] );
+		}
+
 		foreach ( $taxonomies as $taxonomy ) {
 			$base        = ! empty( $taxonomy->rest_base ) ? $taxonomy->rest_base : $taxonomy->name;
 			$tax_exclude = $base . '_exclude';
@@ -1558,7 +1562,11 @@ class WP_REST_Posts_Controller extends WP_REST_Controller {
 
 		if ( rest_is_field_included( 'excerpt', $fields ) ) {
 			/** This filter is documented in wp-includes/post-template.php */
-			$excerpt         = apply_filters( 'the_excerpt', apply_filters( 'get_the_excerpt', $post->post_excerpt, $post ) );
+			$excerpt = apply_filters( 'get_the_excerpt', $post->post_excerpt, $post );
+
+			/** This filter is documented in wp-includes/post-template.php */
+			$excerpt = apply_filters( 'the_excerpt', $excerpt );
+
 			$data['excerpt'] = array(
 				'raw'       => $post->post_excerpt,
 				'rendered'  => post_password_required( $post ) ? '' : $excerpt,
@@ -2526,6 +2534,14 @@ class WP_REST_Posts_Controller extends WP_REST_Controller {
 		);
 
 		$taxonomies = wp_list_filter( get_object_taxonomies( $this->post_type, 'objects' ), array( 'show_in_rest' => true ) );
+
+		if ( ! empty( $taxonomies ) ) {
+			$query_params['tax_relation'] = array(
+				'description' => __( 'Limit result set based on relationship between multiple taxonomies.' ),
+				'type'        => 'string',
+				'enum'        => array( 'AND', 'OR' ),
+			);
+		}
 
 		foreach ( $taxonomies as $taxonomy ) {
 			$base = ! empty( $taxonomy->rest_base ) ? $taxonomy->rest_base : $taxonomy->name;

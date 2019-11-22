@@ -70,7 +70,7 @@ abstract class WP_REST_Meta_Fields {
 	 *
 	 * @param int             $object_id Object ID to fetch meta for.
 	 * @param WP_REST_Request $request   Full details about the request.
-	 * @return WP_Error|object Object containing the meta values by name, otherwise WP_Error object.
+	 * @return object|WP_Error Object containing the meta values by name, otherwise WP_Error object.
 	 */
 	public function get_value( $object_id, $request ) {
 		$fields   = $this->get_registered_fields();
@@ -128,7 +128,7 @@ abstract class WP_REST_Meta_Fields {
 	 *
 	 * @param array           $meta      Array of meta parsed from the request.
 	 * @param int             $object_id Object ID to fetch meta for.
-	 * @return WP_Error|null WP_Error if one occurs, null on success.
+	 * @return null|WP_Error Null on success, WP_Error object on failure.
 	 */
 	public function update_value( $meta, $object_id ) {
 		$fields = $this->get_registered_fields();
@@ -430,7 +430,7 @@ abstract class WP_REST_Meta_Fields {
 			$type = ! empty( $rest_args['schema']['type'] ) ? $rest_args['schema']['type'] : $type;
 
 			if ( null === $rest_args['schema']['default'] ) {
-				$rest_args['schema']['default'] = $this->get_default_for_type( $type );
+				$rest_args['schema']['default'] = static::get_empty_value_for_type( $type );
 			}
 
 			$rest_args['schema'] = $this->default_additional_properties_to_false( $rest_args['schema'] );
@@ -501,6 +501,10 @@ abstract class WP_REST_Meta_Fields {
 			$schema = $args['schema']['items'];
 		}
 
+		if ( '' === $value && in_array( $schema['type'], array( 'boolean', 'integer', 'number' ), true ) ) {
+			$value = static::get_empty_value_for_type( $schema['type'] );
+		}
+
 		if ( is_wp_error( rest_validate_value_from_schema( $value, $schema ) ) ) {
 			return null;
 		}
@@ -516,7 +520,7 @@ abstract class WP_REST_Meta_Fields {
 	 * @param mixed           $value   The meta value submitted in the request.
 	 * @param WP_REST_Request $request Full details about the request.
 	 * @param string          $param   The parameter name.
-	 * @return WP_Error|string The meta array, if valid, otherwise an error.
+	 * @return array|false The meta array, if valid, false otherwise.
 	 */
 	public function check_meta_is_array( $value, $request, $param ) {
 		if ( ! is_array( $value ) ) {
@@ -559,14 +563,14 @@ abstract class WP_REST_Meta_Fields {
 	}
 
 	/**
-	 * Gets the default value for a schema type.
+	 * Gets the empty value for a schema type.
 	 *
 	 * @since 5.3.0
 	 *
 	 * @param string $type The schema type.
 	 * @return mixed
 	 */
-	protected function get_default_for_type( $type ) {
+	protected static function get_empty_value_for_type( $type ) {
 		switch ( $type ) {
 			case 'string':
 				return '';

@@ -226,34 +226,34 @@ function wp_default_packages_scripts( &$scripts ) {
 	$packages_versions = array(
 		'a11y'                               => '2.5.1',
 		'annotations'                        => '1.7.2',
-		'api-fetch'                          => '3.6.2',
+		'api-fetch'                          => '3.6.4',
 		'autop'                              => '2.5.1',
 		'blob'                               => '2.5.1',
-		'block-editor'                       => '3.2.2',
-		'block-library'                      => '2.9.2',
+		'block-editor'                       => '3.2.4',
+		'block-library'                      => '2.9.5',
 		'block-serialization-default-parser' => '3.4.1',
 		'blocks'                             => '6.7.2',
 		'components'                         => '8.3.2',
 		'compose'                            => '3.7.2',
-		'core-data'                          => '2.7.2',
-		'data-controls'                      => '1.3.2',
+		'core-data'                          => '2.7.4',
+		'data-controls'                      => '1.3.4',
 		'data'                               => '4.9.2',
 		'date'                               => '3.5.0',
 		'deprecated'                         => '2.6.1',
 		'dom-ready'                          => '2.5.1',
 		'dom'                                => '2.5.2',
-		'edit-post'                          => '3.8.2',
-		'editor'                             => '9.7.2',
+		'edit-post'                          => '3.8.5',
+		'editor'                             => '9.7.5',
 		'element'                            => '2.8.2',
 		'escape-html'                        => '1.5.1',
-		'format-library'                     => '1.9.2',
+		'format-library'                     => '1.9.4',
 		'hooks'                              => '2.6.0',
 		'html-entities'                      => '2.5.0',
 		'i18n'                               => '3.6.1',
 		'is-shallow-equal'                   => '1.6.1',
 		'keycodes'                           => '2.6.2',
-		'list-reusable-blocks'               => '1.8.2',
-		'media-utils'                        => '1.2.2',
+		'list-reusable-blocks'               => '1.8.4',
+		'media-utils'                        => '1.2.4',
 		'notices'                            => '1.8.2',
 		'nux'                                => '3.7.2',
 		'plugins'                            => '2.7.2',
@@ -261,9 +261,9 @@ function wp_default_packages_scripts( &$scripts ) {
 		'redux-routine'                      => '3.6.2',
 		'rich-text'                          => '3.7.2',
 		'shortcode'                          => '2.4.1',
-		'server-side-render'                 => '1.3.2',
+		'server-side-render'                 => '1.3.4',
 		'token-list'                         => '1.6.1',
-		'url'                                => '2.8.1',
+		'url'                                => '2.8.2',
 		'viewport'                           => '2.8.2',
 		'wordcount'                          => '2.6.2',
 	);
@@ -651,6 +651,14 @@ function wp_default_packages_inline_scripts( &$scripts ) {
 	}
 	$scripts->add_inline_script(
 		'wp-api-fetch',
+		sprintf(
+			'wp.apiFetch.use( wp.apiFetch.createRootURLMiddleware( "%s" ) );',
+			esc_url_raw( get_rest_url() )
+		),
+		'after'
+	);
+	$scripts->add_inline_script(
+		'wp-api-fetch',
 		implode(
 			"\n",
 			array(
@@ -668,15 +676,6 @@ function wp_default_packages_inline_scripts( &$scripts ) {
 		),
 		'after'
 	);
-	$scripts->add_inline_script(
-		'wp-api-fetch',
-		sprintf(
-			'wp.apiFetch.use( wp.apiFetch.createRootURLMiddleware( "%s" ) );',
-			esc_url_raw( get_rest_url() )
-		),
-		'after'
-	);
-
 	$scripts->add_inline_script(
 		'wp-data',
 		implode(
@@ -778,7 +777,7 @@ function wp_tinymce_inline_scripts() {
 		'wpview',
 	);
 
-	/* This filter is documented in wp-includes/class-wp-editor.php */
+	/** This filter is documented in wp-includes/class-wp-editor.php */
 	$tinymce_plugins = apply_filters( 'tiny_mce_plugins', $tinymce_plugins, 'classic-block' );
 	$tinymce_plugins = array_unique( $tinymce_plugins );
 
@@ -807,7 +806,7 @@ function wp_tinymce_inline_scripts() {
 		'wp_adv',
 	);
 
-	/* This filter is documented in wp-includes/class-wp-editor.php */
+	/** This filter is documented in wp-includes/class-wp-editor.php */
 	$toolbar1 = apply_filters( 'mce_buttons', $toolbar1, 'classic-block' );
 
 	$toolbar2 = array(
@@ -824,13 +823,13 @@ function wp_tinymce_inline_scripts() {
 		'wp_help',
 	);
 
-	/* This filter is documented in wp-includes/class-wp-editor.php */
+	/** This filter is documented in wp-includes/class-wp-editor.php */
 	$toolbar2 = apply_filters( 'mce_buttons_2', $toolbar2, 'classic-block' );
-	/* This filter is documented in wp-includes/class-wp-editor.php */
+	/** This filter is documented in wp-includes/class-wp-editor.php */
 	$toolbar3 = apply_filters( 'mce_buttons_3', array(), 'classic-block' );
-	/* This filter is documented in wp-includes/class-wp-editor.php */
+	/** This filter is documented in wp-includes/class-wp-editor.php */
 	$toolbar4 = apply_filters( 'mce_buttons_4', array(), 'classic-block' );
-	/* This filter is documented in wp-includes/class-wp-editor.php */
+	/** This filter is documented in wp-includes/class-wp-editor.php */
 	$external_plugins = apply_filters( 'mce_external_plugins', array(), 'classic-block' );
 
 	$tinymce_settings = array(
@@ -851,7 +850,7 @@ function wp_tinymce_inline_scripts() {
 		array_merge( $tinymce_settings, $editor_settings['tinymce'] );
 	}
 
-	/* This filter is documented in wp-includes/class-wp-editor.php */
+	/** This filter is documented in wp-includes/class-wp-editor.php */
 	$tinymce_settings = apply_filters( 'tiny_mce_before_init', $tinymce_settings, 'classic-block' );
 
 	// Do "by hand" translation from PHP array to js object.
