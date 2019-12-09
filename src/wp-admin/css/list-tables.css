@@ -1751,10 +1751,6 @@ div.action-links,
 		display: none;
 	}
 
-	.comment-count {
-		font-size: 14px;
-	}
-
 	.wp-list-table th.column-primary ~ th,
 	.wp-list-table tr:not(.inline-edit-row):not(.no-items) td.column-primary ~ td:not(.check-column) {
 		display: none;
@@ -1767,7 +1763,10 @@ div.action-links,
 	/* Checkboxes need to show */
 	.wp-list-table tr th.check-column {
 		display: table-cell;
-		width: 35px;
+	}
+
+	.wp-list-table .check-column {
+		width: 2.5em;
 	}
 
 	.wp-list-table .column-primary .toggle-row {
@@ -1896,10 +1895,6 @@ div.action-links,
 	.widefat thead td.check-column,
 	.widefat tfoot td.check-column {
 		padding-top: 10px;
-	}
-
-	.widefat * {
-		word-wrap: normal;
 	}
 
 	/* Make row actions more easy to select on mobile */
